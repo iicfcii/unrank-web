@@ -9,15 +9,15 @@ export const Footer = (props) => {
       height='60px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'top', sytle:'solid'}}>
       <Box justify='center'>
-        <Text size='medium' color='gray'>©2020 Unrank.gg</Text>
+        <Text size='medium'>©2020 Unrank.gg</Text>
       </Box>
       <Box direction='row' align='center' gap='medium'>
-        <Link to={'/about'} style={{textDecoration:'none'}}>
-          <Text size='medium' color='gray'>联系我们</Text>
+        <Link to={'/about'} style={{textDecoration:'none', color:'inherit'}}>
+          <Text size='medium'>联系我们</Text>
         </Link>
         <Box width='1px' height='14px' background='border'></Box>
-        <Link to={'/legal'} style={{textDecoration:'none'}}>
-          <Text size='medium' color='gray'>隐私和条款</Text>
+        <Link to={'/legal'} style={{textDecoration:'none', color:'inherit'}}>
+          <Text size='medium'>隐私和条款</Text>
         </Link>
       </Box>
     </Box>
