@@ -5,10 +5,10 @@ import { theme } from './theme';
 
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
-import { Home } from './pages/Home/Home';
-import { Demo } from './pages/Demo/Demo';
-import { About } from './pages/About/About';
-import { Legal } from './pages/Legal/Legal';
+import { Home } from './Home/Home';
+import { Analysis } from './Analysis/Analysis';
+import { About } from './About/About';
+import { Legal } from './Legal/Legal';
 
 const App = () => {
   return (
@@ -22,8 +22,8 @@ const App = () => {
           <Route path='/about'>
             <About />
           </Route>
-          <Route path='/demo'>
-            <Demo />
+          <Route path='/analysis'>
+            <Analysis />
           </Route>
           <Route path='/'>
             <Home />

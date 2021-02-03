@@ -10,7 +10,7 @@ export const Header = (props) => {
   const [select, setSelect] = useState(HOME_LABEL)
 
   let matchHome = useRouteMatch('/');
-  let matchDemo = useRouteMatch('/demo');
+  let matchDemo = useRouteMatch('/analysis');
   let matchAbout = useRouteMatch('/about');
   let matchLegal = useRouteMatch('/legal');
 
@@ -36,7 +36,7 @@ export const Header = (props) => {
           to={'/'}/>
         <Item
           label={DEMO_LABEL} select={select===DEMO_LABEL}
-          to={'/demo'}/>
+          to={'/analysis'}/>
         <Item
           label={ABOUT_LABEL} select={select===ABOUT_LABEL}
           to={'/about'}/>
@@ -44,7 +44,7 @@ export const Header = (props) => {
       <Box fill justify='center' align='end'>
         <Link to={'/about'} style={{display:'flex', textDecoration:'none'}}>
           <Box
-            pad={{horizontal:'medium', vertical:'xsmall'}} round='xsmall'
+            pad={{horizontal:'medium', vertical:'xsmall'}} round='xxsmall'
             justify='center' align='center' background='orange'>
             <Text weight={700} size='medium' color='white'>分析</Text>
           </Box>
