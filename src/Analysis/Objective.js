@@ -11,7 +11,7 @@ export const Objective = (props) => {
   const [range, setRange] = useState([0,0]);
   const [dataGroups, setDataGroups] = useState([]);
 
-  const [movingRange, setMovingRange] = useState(false);
+  const [movingRangeBar, setMovingRangeBar] = useState(false);
 
   let data = props.data;
   let maxRange = data.objective.status.length-1
@@ -39,7 +39,7 @@ export const Objective = (props) => {
     };
     let onMouseUp = () => {
       setMouseUp(true);
-      setMovingRange(false);
+      setMovingRangeBar(false);
     }
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
@@ -51,7 +51,7 @@ export const Objective = (props) => {
 
   useEffect(() => {
     let onMouseMove = (event) => {
-      if (!movingRange || !containerRef.current) return;
+      if (!movingRangeBar || !containerRef.current) return;
 
       let rect = containerRef.current.getBoundingClientRect()
       let x = event.clientX - rect.left;
@@ -73,7 +73,7 @@ export const Objective = (props) => {
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
     }
-  },[movingRange, range, maxRange, data])
+  },[movingRangeBar, range, maxRange, data])
 
   let chartAreas = [];
   dataGroups.forEach((g, i) => {
@@ -240,7 +240,7 @@ export const Objective = (props) => {
             background='#F4F4F4'
             onMouseDown={(event) => {
               // NOTE: use style to detect which element is pressed
-              if (event.target.style.cursor) setMovingRange(true);
+              if (event.target.style.cursor) setMovingRangeBar(true);
             }}>
             <RangeSelector
               disabled
