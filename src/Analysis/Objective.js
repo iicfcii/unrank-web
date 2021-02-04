@@ -1,59 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Chart, Stack, Text, Button } from 'grommet';
+import { Box, Chart, Stack, Text, Button, RangeSelector } from 'grommet';
 import { StatBox } from './StatBox';
 
 export const Objective = (props) => {
+  const [canHover, setCanHover] = useState(true);
   const [hoverPt, setHoverPt] = useState(null);
   const [value, setValue] = useState(null);
-  const [range, setRange] = useState(null);
+  const [range, setRange] = useState([0,0]);
   const [dataGroups, setDataGroups] = useState([]);
 
   let data = props.data;
-  let totalLength = data.objective.status.length;
 
   // console.log(data.objective.status)
   useEffect(() => {
-    let length = data.objective.status.length;
-
+    let status = data.objective.status;
     let time = [];
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < status.length; i++) {
       time.push(i);
     }
-    let status = data.objective.status;
-    let progress = data.objective.progress;
+    // let rangeNew = [0,time[time.length-1]];
+    let rangeNew = [0,500];
 
-    let dataGroupsNew = [{color: chartColor(null), values: []}];
-    let prevS = null;
-    let prevT = 0;
-    let groupIndex = 0;
-    time.forEach((t, i) => {
-      let s = status[i];
-      if (
-        (s > 0 && prevS <= 0) ||
-        (s < 0 && prevS >= 0 && prevS !== null) ||
-        (s === null && prevS > 0)
-      ) {
-        // Only color when status > 0
-        prevS = s;
-        prevT = t;
-        dataGroupsNew.push({color: chartColor(s), values: []});
-        groupIndex ++;
-      }
-      dataGroupsNew[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?progress[i]:0]});
-    });
-
-    console.log(dataGroupsNew)
-    setDataGroups(dataGroupsNew);
-    setRange([0,time[time.length-1]]);
+    setDataGroups(toDataGroups(data, rangeNew));
+    setRange(rangeNew);
   },[data]);
-  
+
+  // Hover only works when mouse not pressed
+  useEffect(() => {
+    let onMouseDown = () => setCanHover(false);
+    let onMouseUp = () => setCanHover(true);
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('mouseup', onMouseUp);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+  },[])
+
   let chartAreas = [];
   dataGroups.forEach((g, i) => {
     let length = g.values.length;
     if (g.color === 'none') {
       chartAreas.push(
-        <Box key={i} fill='vertical' width={length/totalLength*100+'%'}>
+        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
+            key={range[0].toString()+range[1].toString()}
             size='fill' type='area' thickness='0px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
@@ -61,9 +52,9 @@ export const Objective = (props) => {
       );
     } else {
       chartAreas.push(
-        <Box key={i} fill='vertical' width={length/totalLength*100+'%'}>
+        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={i}
+            key={range[0].toString()+range[1].toString()}
             size='fill' color={{color: g.color, opacity: '0.2'}}
             type='area' thickness='0px'
             bounds={[[0,length],[0,100]]}
@@ -78,8 +69,9 @@ export const Objective = (props) => {
     let length = g.values.length;
     if (g.color === 'none') {
       chartLines.push(
-        <Box key={i} fill='vertical' width={length/totalLength*100+'%'}>
+        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
+            key={range[0].toString()+range[1].toString()}
             size='fill' type='line' thickness='0px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
@@ -87,9 +79,9 @@ export const Objective = (props) => {
       );
     } else {
       chartLines.push(
-        <Box key={i} fill='vertical' width={length/totalLength*100+'%'}>
+        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={i}
+            key={range[0].toString()+range[1].toString()}
             size='fill' round color={g.color}
             type='line' thickness='3px'
             bounds={[[0,length],[0,100]]}
@@ -179,11 +171,13 @@ export const Objective = (props) => {
           <Box
             fill
             onMouseMove={(event) => {
+              if (!canHover) return;
+
               let rect = event.target.getBoundingClientRect()
               let x = event.clientX - rect.left;
               // let y = event.clientY - rect.top;
 
-              let t = Math.round(x/rect.width*(range[1]-range[0]));
+              let t = Math.round(x/rect.width*(range[1]-range[0]))+range[0];
               let p = data.objective.progress[t];
               let status = data.objective.status;
 
@@ -201,6 +195,22 @@ export const Objective = (props) => {
             }}>
           </Box>
         </Stack>
+        <Box
+          margin={{top:'small'}}
+          background='#F4F4F4'>
+          <RangeSelector
+            opacity={1}
+            direction="horizontal"
+            min={0}
+            max={data.objective.status.length-1}
+            values={range}
+            size='8px'
+            round='small'
+            onChange={(values) => {
+              setDataGroups(toDataGroups(data, values));
+              setRange(values);
+            }}/>
+        </Box>
       </Box>
     </StatBox>
   );
@@ -248,4 +258,31 @@ const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60
   return `${min}分${sec}秒`
+}
+
+const toDataGroups = (data, range) => {
+  let status = data.objective.status;
+  let progress = data.objective.progress;
+
+  let prevT = range[0];
+  let prevS = status[prevT];
+  let dataGroupsNew = [{color: chartColor(prevS), values: []}];
+  let groupIndex = 0;
+  for (let t = range[0]; t < range[1]; t++) {
+    let s = status[t];
+    if (
+      (s > 0 && prevS <= 0) ||
+      (s < 0 && prevS >= 0 && prevS !== null) ||
+      (s === null && prevS > 0)
+    ) {
+      // Only color when status > 0
+      prevT = t;
+      prevS = s;
+      dataGroupsNew.push({color: chartColor(s), values: []});
+      groupIndex ++;
+    }
+    dataGroupsNew[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?progress[t]:0]});
+  }
+
+  return dataGroupsNew;
 }

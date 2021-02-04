@@ -13,7 +13,7 @@ export const theme = {
       textLight: '#8B8C8E',
       border: '#CFD7DF',
       background: '#F4F5F6',
-      placeholder: '#9E9E9E'
+      placeholder: '#9E9E9E',
     },
     focus: {
       border: undefined,
