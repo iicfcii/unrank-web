@@ -6,6 +6,8 @@ export const theme = {
     colors:{
       orange: '#F18805',
       orangeLight: '#FBAF00',
+      blue: '#3993DD',
+      red: '#F94144',
       text: '#353C43',
       border: '#CFD7DF',
       background: '#F4F5F6',
@@ -21,7 +23,7 @@ export const theme = {
     edgeSize: {
       none: '0px',
       hair: '1px',
-      xxsmall: '4px', 
+      xxsmall: '4px',
       xsmall: '8px',
       small: '16px',
       medium: '20px',
@@ -50,5 +52,5 @@ export const theme = {
   // }
   textInput: {
     extend: 'background: #ECECEC;'
-  }
+  },
 };

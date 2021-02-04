@@ -6,7 +6,7 @@ export const StatBox = (props) => {
     <Box
       background='white' justify='center' fill='vertical'
       pad='medium' round='xsmall' elevation='normal'
-      border={{color:'border', size:'xsmall', side:'all', sytle:'solid'}}
+      border={{color:'border', size:'xsmall', side:'all', style:'solid'}}
       {...props}>
       {props.children}
     </Box>
