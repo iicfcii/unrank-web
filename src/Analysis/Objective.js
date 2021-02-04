@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Chart, Stack, Text, Button, RangeSelector } from 'grommet';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Chart, Stack, Text, Button, RangeSelector, ThemeContext } from 'grommet';
 import { StatBox } from './StatBox';
 
 export const Objective = (props) => {
-  const [canHover, setCanHover] = useState(true);
+  const containerRef = useRef(null);
+
+  const [mouseUp, setMouseUp] = useState(true);
   const [hoverPt, setHoverPt] = useState(null);
   const [value, setValue] = useState(null);
   const [range, setRange] = useState([0,0]);
   const [dataGroups, setDataGroups] = useState([]);
 
+  const [movingRange, setMovingRange] = useState(false);
+
   let data = props.data;
+  let maxRange = data.objective.status.length-1
 
   // console.log(data.objective.status)
   useEffect(() => {
@@ -18,8 +23,8 @@ export const Objective = (props) => {
     for (let i = 0; i < status.length; i++) {
       time.push(i);
     }
-    // let rangeNew = [0,time[time.length-1]];
-    let rangeNew = [0,500];
+    let rangeNew = [0,time[time.length-1]];
+    // let rangeNew = [0,500];
 
     setDataGroups(toDataGroups(data, rangeNew));
     setRange(rangeNew);
@@ -27,8 +32,15 @@ export const Objective = (props) => {
 
   // Hover only works when mouse not pressed
   useEffect(() => {
-    let onMouseDown = () => setCanHover(false);
-    let onMouseUp = () => setCanHover(true);
+    let onMouseDown = () => {
+      setMouseUp(false);
+      setHoverPt(null);
+      setValue(null);
+    };
+    let onMouseUp = () => {
+      setMouseUp(true);
+      setMovingRange(false);
+    }
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
     return () => {
@@ -36,6 +48,32 @@ export const Objective = (props) => {
       document.removeEventListener('mouseup', onMouseUp);
     }
   },[])
+
+  useEffect(() => {
+    let onMouseMove = (event) => {
+      if (!movingRange || !containerRef.current) return;
+
+      let rect = containerRef.current.getBoundingClientRect()
+      let x = event.clientX - rect.left;
+      let rangeValue = range[1]-range[0];
+      let values;
+      if (x < 0){
+        values = [0,rangeValue];
+      }
+      if (x > rect.width){
+        values = [maxRange-rangeValue,maxRange];
+      }
+
+      if (values) {
+        setDataGroups(toDataGroups(data, values));
+        setRange(values);
+      }
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+    }
+  },[movingRange, range, maxRange, data])
 
   let chartAreas = [];
   dataGroups.forEach((g, i) => {
@@ -171,7 +209,7 @@ export const Objective = (props) => {
           <Box
             fill
             onMouseMove={(event) => {
-              if (!canHover) return;
+              if (!mouseUp) return;
 
               let rect = event.target.getBoundingClientRect()
               let x = event.clientX - rect.left;
@@ -195,22 +233,30 @@ export const Objective = (props) => {
             }}>
           </Box>
         </Stack>
-        <Box
-          margin={{top:'small'}}
-          background='#F4F4F4'>
-          <RangeSelector
-            opacity={1}
-            direction="horizontal"
-            min={0}
-            max={data.objective.status.length-1}
-            values={range}
-            size='8px'
-            round='small'
-            onChange={(values) => {
-              setDataGroups(toDataGroups(data, values));
-              setRange(values);
-            }}/>
-        </Box>
+        <ThemeContext.Extend value={{box:{extend:`:focus{outline:none}`}}}>
+          <Box
+            ref={containerRef}
+            margin={{top:'small'}}
+            background='#F4F4F4'
+            onMouseDown={(event) => {
+              // NOTE: use style to detect which element is pressed
+              if (event.target.style.cursor) setMovingRange(true);
+            }}>
+            <RangeSelector
+              disabled
+              opacity='1'
+              direction="horizontal"
+              min={0}
+              max={maxRange}
+              values={range}
+              size='8px'
+              round='small'
+              onChange={(values) => {
+                setDataGroups(toDataGroups(data, values));
+                setRange(values);
+              }}/>
+          </Box>
+        </ThemeContext.Extend>
       </Box>
     </StatBox>
   );
