@@ -234,27 +234,28 @@ export const Objective = (props) => {
           </Box>
         </Stack>
         <ThemeContext.Extend value={{box:{extend:`:focus{outline:none}`}}}>
-          <Box
-            ref={containerRef}
-            margin={{top:'small'}}
-            background='#F4F4F4'
-            onMouseDown={(event) => {
-              // NOTE: use style to detect which element is pressed
-              if (event.target.style.cursor) setMovingRangeBar(true);
-            }}>
+          <Box margin={{top:'small'}} flex={false}>
+            <Box
+              ref={containerRef}
+              background='#F4F4F4' height='8px'
+              onMouseDown={(event) => {
+                // NOTE: use style to detect which element is pressed
+                if (event.target.style.cursor) setMovingRangeBar(true);
+              }}>
             <RangeSelector
-              disabled
-              opacity='1'
+              opacity='0.2' size='8px' round='small'
               direction="horizontal"
-              min={0}
-              max={maxRange}
+              min={0} max={maxRange}
               values={range}
-              size='8px'
-              round='small'
               onChange={(values) => {
                 setDataGroups(toDataGroups(data, values));
                 setRange(values);
               }}/>
+            </Box>
+            <Box direction='row' margin={{top:'xxsmall'}} justify='between'>
+              <Text size='small'>{formatSeconds(range[0])}</Text>
+              <Text size='small'>{formatSeconds(range[1])}</Text>
+            </Box>
           </Box>
         </ThemeContext.Extend>
       </Box>
@@ -303,7 +304,10 @@ const chartColor = (s) => {
 const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60
-  return `${min}分${sec}秒`
+
+  if (min === 0) return `${sec}秒`;
+
+  return `${min}分${sec}秒`;
 }
 
 const toDataGroups = (data, range) => {

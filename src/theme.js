@@ -1,3 +1,6 @@
+import React from 'react';
+import { Box } from 'grommet';
+
 export const theme = {
   global: {
     font: {
@@ -80,6 +83,19 @@ export const theme = {
       font: {
         weight: 700,
       },
+    }
+  },
+  rangeSelector: {
+    edge: {
+      type: ( // Edge container size is 12*12px
+        <Box
+          width='8px' height='100%' overflow='visible'>
+          <Box
+            style={{position: 'relative', top:'-2px', boxShadow: '1px -1px 1px rgba(0, 0, 0, 0.1)'}}
+            height='16px' background='orange' flex={false}>
+          </Box>
+        </Box>
+      )
     }
   }
 };
