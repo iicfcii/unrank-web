@@ -7,7 +7,7 @@ const DEMO_LABEL = '示例';
 const ABOUT_LABEL = '关于';
 
 export const Header = (props) => {
-  const [select, setSelect] = useState(HOME_LABEL)
+  const [select, setSelect] = useState(HOME_LABEL);
 
   let matchHome = useRouteMatch('/');
   let matchDemo = useRouteMatch('/analysis');
@@ -26,7 +26,7 @@ export const Header = (props) => {
     <Box
       direction='row' background='white'
       height='80px' pad={{horizontal:'large'}}
-      border={{color:'border', size:'xsmall', side:'bottom', sytle:'solid'}}>
+      border={{color:'border', size:'xsmall', side:'bottom', style:'solid'}}>
       <Box flex={false} justify='center'>
         <Text weight={900} size='xxlarge'>UNRANK</Text>
       </Box>
@@ -62,7 +62,7 @@ const Item = (props) => {
       <Box
         background={select?'orange':'white'} justify='center'
         pad={{horizontal:'large'}}
-        border={select?{color:'orangeLight', size:'medium', side:'bottom', sytle:'solid'}:null}>
+        border={select?{color:'orangeLight', size:'medium', side:'bottom', style:'solid'}:null}>
         <Text size='large' color={select?'white':'text'}>
           {props.label}
         </Text>
