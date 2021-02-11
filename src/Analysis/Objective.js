@@ -1,31 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Box, Chart, Stack, Text, Button, RangeSelector, ThemeContext } from 'grommet';
+import React, { useState, useEffect } from 'react';
+import { Box, Chart, Stack, Text, Button } from 'grommet';
 import { StatBox } from './StatBox';
+import { TimeSelector} from './TimeSelector';
 
-export const Objective = (props) => {
-  const containerRef = useRef(null);
-
+export const Objective = ({data}) => {
   const [mouseUp, setMouseUp] = useState(true);
   const [hoverPt, setHoverPt] = useState(null);
   const [value, setValue] = useState(null);
   const [range, setRange] = useState([0,0]);
   const [dataGroups, setDataGroups] = useState([]);
 
-  const [movingRangeBar, setMovingRangeBar] = useState(false);
+  let maxRange = data.time.data.length-1
 
-  let data = props.data;
-  let maxRange = data.objective.status.length-1
-
-  // console.log(data.objective.status)
   useEffect(() => {
-    let status = data.objective.status;
-    let time = [];
-    for (let i = 0; i < status.length; i++) {
-      time.push(i);
-    }
-    let rangeNew = [0,time[time.length-1]];
-    // let rangeNew = [0,500];
-
+    let rangeNew = [0,data.time.data.length-1];
     setDataGroups(toDataGroups(data, rangeNew));
     setRange(rangeNew);
   },[data]);
@@ -39,7 +27,6 @@ export const Objective = (props) => {
     };
     let onMouseUp = () => {
       setMouseUp(true);
-      setMovingRangeBar(false);
     }
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
@@ -49,50 +36,26 @@ export const Objective = (props) => {
     }
   },[])
 
-  useEffect(() => {
-    let onMouseMove = (event) => {
-      if (!movingRangeBar || !containerRef.current) return;
-
-      let rect = containerRef.current.getBoundingClientRect()
-      let x = event.clientX - rect.left;
-      let rangeValue = range[1]-range[0];
-      let values;
-      if (x < 0){
-        values = [0,rangeValue];
-      }
-      if (x > rect.width){
-        values = [maxRange-rangeValue,maxRange];
-      }
-
-      if (values) {
-        setDataGroups(toDataGroups(data, values));
-        setRange(values);
-      }
-    };
-    document.addEventListener('mousemove', onMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-    }
-  },[movingRangeBar, range, maxRange, data])
-
-  let chartAreas = [];
+  let areaCharts = [];
   dataGroups.forEach((g, i) => {
     let length = g.values.length;
+    // Change the key based on states so that Chart will rerender
+    let key = range[0].toString()+range[1].toString();
     if (g.color === 'none') {
-      chartAreas.push(
+      areaCharts.push(
         <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={range[0].toString()+range[1].toString()}
+            key={key}
             size='fill' type='area' thickness='0px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
         </Box>
       );
     } else {
-      chartAreas.push(
+      areaCharts.push(
         <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={range[0].toString()+range[1].toString()}
+            key={key}
             size='fill' color={{color: g.color, opacity: '0.2'}}
             type='area' thickness='0px'
             bounds={[[0,length],[0,100]]}
@@ -102,24 +65,25 @@ export const Objective = (props) => {
     }
   });
 
-  let chartLines = [];
+  let lineCharts = [];
   dataGroups.forEach((g, i) => {
     let length = g.values.length;
+    let key = range[0].toString()+range[1].toString();
     if (g.color === 'none') {
-      chartLines.push(
+      lineCharts.push(
         <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={range[0].toString()+range[1].toString()}
+            key={key}
             size='fill' type='line' thickness='0px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
         </Box>
       );
     } else {
-      chartLines.push(
+      lineCharts.push(
         <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
           <Chart
-            key={range[0].toString()+range[1].toString()}
+            key={key}
             size='fill' round color={g.color}
             type='line' thickness='3px'
             bounds={[[0,length],[0,100]]}
@@ -146,7 +110,11 @@ export const Objective = (props) => {
             <Text size='small' color='textLight'>队伍2防守</Text>
           </Box>
         </Box>
-        <Button primary label='整场数据' size='small'/>
+        <Button primary label='整场数据' size='small' onClick={() => {
+          let rangeNew = [0,maxRange];
+          setDataGroups(toDataGroups(data, rangeNew));
+          setRange(rangeNew);
+        }}/>
       </Box>
       <Box fill pad={{top:'12px', left:'48px', right:'24px'}}>
         <Stack fill>
@@ -158,10 +126,10 @@ export const Objective = (props) => {
             <GridLine label='20'/>
           </Box>
           <Box fill direction='row'>
-            {chartAreas}
+            {areaCharts}
           </Box>
           <Box fill direction='row'>
-            {chartLines}
+            {lineCharts}
           </Box>
           <GridLineBottom/>
           {hoverPt && (
@@ -233,31 +201,13 @@ export const Objective = (props) => {
             }}>
           </Box>
         </Stack>
-        <ThemeContext.Extend value={{box:{extend:`:focus{outline:none}`}}}>
-          <Box margin={{top:'small'}} flex={false}>
-            <Box
-              ref={containerRef}
-              background='#F4F4F4' height='8px'
-              onMouseDown={(event) => {
-                // NOTE: use style to detect which element is pressed
-                if (event.target.style.cursor) setMovingRangeBar(true);
-              }}>
-            <RangeSelector
-              opacity='0.2' size='8px' round='small'
-              direction="horizontal"
-              min={0} max={maxRange}
-              values={range}
-              onChange={(values) => {
-                setDataGroups(toDataGroups(data, values));
-                setRange(values);
-              }}/>
-            </Box>
-            <Box direction='row' margin={{top:'xxsmall'}} justify='between'>
-              <Text size='small'>{formatSeconds(range[0])}</Text>
-              <Text size='small'>{formatSeconds(range[1])}</Text>
-            </Box>
-          </Box>
-        </ThemeContext.Extend>
+        <TimeSelector
+          data={data}
+          range={range}
+          onChange={(values) => {
+            setDataGroups(toDataGroups(data, values));
+            setRange(values);
+          }}/>
       </Box>
     </StatBox>
   );
