@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Text, RangeSelector, ThemeContext } from 'grommet';
+import { formatSeconds } from '../utils';
 
 export const TimeSelector = ({data, range, onChange}) => {
   const containerRef = useRef(null);
@@ -67,13 +68,4 @@ export const TimeSelector = ({data, range, onChange}) => {
       </Box>
     </ThemeContext.Extend>
   );
-}
-
-const formatSeconds = (s) => {
-  let min = Math.floor(s/60);
-  let sec = s-min*60
-
-  if (min === 0) return `${sec}秒`;
-
-  return `${min}分${sec}秒`;
 }

@@ -1,13 +1,14 @@
 import React from 'react';
 import { Box, Text } from 'grommet';
 import { StatBox } from './StatBox';
+import { formatSeconds } from '../utils';
 
-export const Info = (props) => {
+export const Info = ({data}) => {
   return(
     <StatBox gap='large' flex={false}>
       <TextBox label='回放代码' value='DEMO'/>
-      <TextBox label='总时长' value='15分00秒'/>
-      <TextBox label='地图' value='哈瓦那(运载目标)'/>
+      <TextBox label='总时长' value={formatSeconds(data.time.data.length-1)}/>
+      <TextBox label='地图' value={`${data.map}(${data.objective.type})`}/>
     </StatBox>
   );
 }

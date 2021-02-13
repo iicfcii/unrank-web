@@ -16,6 +16,9 @@ export const theme = {
       textLight: '#8B8C8E',
       border: '#CFD7DF',
       background: '#F4F5F6',
+      backgroundLight: '#FBFBFB',
+      line: '#E1E1E1',
+      lineLight: '#EFEFEF',
       placeholder: '#9E9E9E',
     },
     focus: {
@@ -28,12 +31,14 @@ export const theme = {
     edgeSize: {
       none: '0px',
       hair: '1px',
+      xxxsmall: '2px',
       xxsmall: '4px',
       xsmall: '8px',
-      small: '16px',
-      medium: '20px',
+      small: '12px',
+      medium: '24px',
       large: '32px',
-      xlarge: '64px',
+      xlarge: '48px',
+      xxlarge: '64px',
       responsiveBreakpoint: 'small',
     },
     elevation: {
@@ -58,7 +63,7 @@ export const theme = {
       size: '12px',
       height: '14px',
       maxWidth: '240px'
-    }
+    },
   },
   textInput: {
     extend: 'background: #ECECEC;'

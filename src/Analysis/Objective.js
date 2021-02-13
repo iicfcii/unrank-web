@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Chart, Stack, Text, Button } from 'grommet';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
+import { formatSeconds } from '../utils';
 
 export const Objective = ({data}) => {
   const [mouseUp, setMouseUp] = useState(true);
@@ -135,13 +136,13 @@ export const Objective = ({data}) => {
           {hoverPt && (
             <Box
               fill='vertical' style={{marginLeft: hoverPt[0]+'px'}}
-              border={{color:'#737373', size:'1px', side:'left', style:'dashed'}}>
+              border={{color:'text', size:'1px', side:'left', style:'dashed'}}>
             </Box>
           )}
           {hoverPt && (
             <Box
               style={{marginTop: hoverPt[1]+'px'}}
-              border={{color:'#737373', size:'1px', side:'top', style:'dashed'}}>
+              border={{color:'text', size:'1px', side:'top', style:'dashed'}}>
             </Box>
           )}
           {hoverPt && (
@@ -217,7 +218,7 @@ const GridLine = (props) => {
   return (
     <Box
       style={{position:'relative'}}
-      fill border={{color:'#EFEFEF', size:'1px', side:'top', style:'dashed'}}>
+      fill border={{color:'lineLight', size:'1px', side:'top', style:'dashed'}}>
       <Box
         style={{
           position:'absolute', left:'-12px',
@@ -233,7 +234,7 @@ const GridLineBottom = (props) => {
   return (
     <Box
       style={{position:'relative'}}
-      fill border={{color:'#A9A9A9', size:'1px', side:'bottom', style:'solid'}}>
+      fill border={{color:'text', size:'1px', side:'bottom', style:'solid'}}>
       <Box
         style={{
           position:'absolute', left:'-12px', bottom: '0px',
@@ -249,15 +250,6 @@ const chartColor = (s) => {
   if (s === 2) return 'red';
   if (s === 1) return 'blue';
   return 'none';
-}
-
-const formatSeconds = (s) => {
-  let min = Math.floor(s/60);
-  let sec = s-min*60
-
-  if (min === 0) return `${sec}秒`;
-
-  return `${min}分${sec}秒`;
 }
 
 const toDataGroups = (data, range) => {
