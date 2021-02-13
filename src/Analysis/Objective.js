@@ -2,40 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Box, Chart, Stack, Text, Button } from 'grommet';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
-import { formatSeconds } from '../utils';
+import { formatSeconds, useMouseUp } from '../utils';
 
-export const Objective = ({data}) => {
-  const [mouseUp, setMouseUp] = useState(true);
+export const Objective = ({data, range, onRangeChange}) => {
   const [hoverPt, setHoverPt] = useState(null);
   const [value, setValue] = useState(null);
-  const [range, setRange] = useState([0,0]);
   const [dataGroups, setDataGroups] = useState([]);
-
-  let maxRange = data.time.data.length-1
+  const mouseUp = useMouseUp();
 
   useEffect(() => {
-    let rangeNew = [0,data.time.data.length-1];
-    setDataGroups(toDataGroups(data, rangeNew));
-    setRange(rangeNew);
-  },[data]);
-
-  // Hover only works when mouse not pressed
-  useEffect(() => {
-    let onMouseDown = () => {
-      setMouseUp(false);
-      setHoverPt(null);
-      setValue(null);
-    };
-    let onMouseUp = () => {
-      setMouseUp(true);
-    }
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mouseup', onMouseUp);
-    }
-  },[])
+    setDataGroups(toDataGroups(data, range));
+  },[data, range]);
 
   let areaCharts = [];
   dataGroups.forEach((g, i) => {
@@ -112,9 +89,9 @@ export const Objective = ({data}) => {
           </Box>
         </Box>
         <Button primary label='整场数据' size='small' onClick={() => {
-          let rangeNew = [0,maxRange];
+          let rangeNew = [0,data.time.data.length];
           setDataGroups(toDataGroups(data, rangeNew));
-          setRange(rangeNew);
+          if(onRangeChange) onRangeChange(rangeNew);
         }}/>
       </Box>
       <Box fill pad={{top:'12px', left:'48px', right:'24px'}}>
@@ -178,7 +155,12 @@ export const Objective = ({data}) => {
           <Box
             fill
             onMouseMove={(event) => {
-              if (!mouseUp) return;
+              if (!mouseUp) {
+                // Hover only works when mouse not pressed
+                setHoverPt(null);
+                setValue(null);
+                return;
+              }
 
               let rect = event.target.getBoundingClientRect()
               let x = event.clientX - rect.left;
@@ -204,10 +186,11 @@ export const Objective = ({data}) => {
         </Stack>
         <TimeSelector
           data={data}
-          range={range}
+          range={[range[0],range[1]-1]}
           onChange={(values) => {
-            setDataGroups(toDataGroups(data, values));
-            setRange(values);
+            let rangeNew = [values[0],values[1]+1]
+            setDataGroups(toDataGroups(data, rangeNew));
+            if(onRangeChange) onRangeChange(rangeNew);
           }}/>
       </Box>
     </StatBox>

@@ -2,17 +2,15 @@ import React from 'react';
 import { Box, Text } from 'grommet';
 import { Down } from 'grommet-icons';
 import { StatBox } from './StatBox';
+import { heroAvatar } from '../assets/assets';
 
 export const Table = ({data, team, range}) => {
-
-
   let color = team===1?'blue':'red';
   let direction = team===1?'row':'row-reverse';
   let heroData = calcHero(data, range, team);
   let ultData = calcUlt(data, range, team);
   let deathData = calcDeath(data, range, team);
   let elimData = calcElim(data, range, team);
-
 
   let ultMax = 0;
   teamToPlayers(team).forEach((player) => {
@@ -30,8 +28,8 @@ export const Table = ({data, team, range}) => {
   teamToPlayers(team).forEach((player) => {
     playerRows.push(
       <Box
-        key={player}
-        direction={direction} height='48px' gap='xlarge' align='start'
+        key={player} direction={direction}
+        height='48px' gap='xlarge' align='start' justify='between'
         border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
         <BarChart data={heroData[player]} color={color}/>
         <ValueChart value={ultData[player]} max={ultMax} color={color}/>
@@ -57,14 +55,14 @@ export const Table = ({data, team, range}) => {
       </Box>
       <Box gap='medium' margin={{top: 'small'}}>
         <Box
-          background='background' height='48px' direction={direction}
+          direction={direction}
+          background='background' height='48px' gap='xlarge'
+          justify='between' align='start'
           border={{color:'line', size:'2px', side:'bottom', style:'solid'}}>
-          <Box direction={direction} height='48px' gap='xlarge' align='start'>
-            <BarTitle label='英雄'/>
-            <ValueTitle label='大招'/>
-            <ValueTitle label='死亡'/>
-            <ValueTitle label='击杀'/>
-          </Box>
+          <BarTitle label='英雄'/>
+          <ValueTitle label='大招'/>
+          <ValueTitle label='死亡'/>
+          <ValueTitle label='击杀'/>
         </Box>
         {playerRows}
       </Box>
@@ -95,10 +93,21 @@ const BarChart = ({data, color}) => {
     total += d[1];
   });
 
+
   let subBars = [];
   data.forEach((d,i) => {
+    if (!heroAvatar[d[0]]) console.log(d[0])
     subBars.push(
-      <Box key={i} height='100%' width={`${d[1]/total*100}%`} background={color}>
+      <Box
+        key={i} overflow='hidden' wrap direction='row'
+        height='100%' width={`${d[1]/total*100}%`}
+        background={color} justify='center' align='center'>
+        <Box width={{min: '4px'}} height='100%'></Box>
+        <Box
+          width={{min:'32px'}} height='32px' round margin={{right:'4px'}}
+          background={`url(${heroAvatar[d[0]]}), white`}
+          border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+        </Box>
       </Box>
     );
   });
@@ -122,8 +131,10 @@ const ValueChart = ({value, max, color}) => {
       </Text>
       <Box
         background={{color:color, opacity:0.2}}
-        height='8px' width='128px'>
-        <Box background={color} height='8px' width={`${value/max*100}%`}></Box>
+        height='8px' width='128px'
+        align={color==='red'?'end':'start'}>
+        <Box background={color} height='8px' width={`${value/max*100}%`}>
+        </Box>
       </Box>
     </Box>
   )
@@ -140,16 +151,17 @@ const calcHero = (data, range, team) => {
     hero[player] = [];
     for (let i=range[0]; i<range[1]; i++){
       let h = data['hero'][player][i];
+      let hName = data['heroes'][h];
       if (h === null || h === -1) continue;
       if (hero[player].length === 0) {
-        hero[player].push([h,1]);
+        hero[player].push([hName,1]);
       } else {
-        let lastI = hero[player].length-1
-        let lastH = hero[player][lastI][0]
-        if (lastH === h) {
+        let lastI = hero[player].length-1;
+        let lastHName = hero[player][lastI][0]
+        if (lastHName === hName) {
           hero[player][lastI][1] ++;
         } else {
-          hero[player].push([h,1]);
+          hero[player].push([hName,1]);
         }
       }
     }
