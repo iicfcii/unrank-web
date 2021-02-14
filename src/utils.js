@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 
+export const teamToColor = (team) => {
+  if (team === 2) return 'red';
+  return 'blue';
+}
+
 export const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60

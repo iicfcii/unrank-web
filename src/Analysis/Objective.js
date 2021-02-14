@@ -141,7 +141,7 @@ export const Objective = ({data, range, onRangeChange}) => {
                 )`,
                 width: 'fit-content'
               }}
-              background='rgba(0,0,0,0.5)' pad='xsmall' round='xxsmall'>
+              background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
               <Box direction='row'>
                 <Text size='small' color='white'>{`进度：`}</Text>
                 <Text weight={900} size='small' color='white'>{`${value[1]}%`}</Text>
@@ -162,7 +162,7 @@ export const Objective = ({data, range, onRangeChange}) => {
                 return;
               }
 
-              let rect = event.target.getBoundingClientRect()
+              let rect = event.target.getBoundingClientRect();
               let x = event.clientX - rect.left;
               // let y = event.clientY - rect.top;
 

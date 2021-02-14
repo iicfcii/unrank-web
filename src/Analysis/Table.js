@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Text } from 'grommet';
 import { Down } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { heroAvatar } from '../assets/assets';
+import { useMouseUp, teamToColor } from '../utils';
 
 export const Table = ({data, team, range}) => {
-  let color = team===1?'blue':'red';
+  let color = teamToColor(team);
   let direction = team===1?'row':'row-reverse';
   let heroData = calcHero(data, range, team);
   let ultData = calcUlt(data, range, team);
@@ -29,12 +30,12 @@ export const Table = ({data, team, range}) => {
     playerRows.push(
       <Box
         key={player} direction={direction}
-        height='48px' gap='xlarge' align='start' justify='between'
+        height='52px' gap='xlarge' align='start' justify='between'
         border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
-        <BarChart data={heroData[player]} color={color}/>
-        <ValueChart value={ultData[player]} max={ultMax} color={color}/>
-        <ValueChart value={deathData[player]} max={deathMax} color={color}/>
-        <ValueChart value={elimData[player]} max={elimMax} color={color}/>
+        <BarChart data={heroData[player]} team={team}/>
+        <ValueChart value={ultData[player]} max={ultMax} team={team}/>
+        <ValueChart value={deathData[player]} max={deathMax} team={team}/>
+        <ValueChart value={elimData[player]} max={elimMax} team={team}/>
       </Box>
     );
   });
@@ -87,41 +88,83 @@ const ValueTitle = ({label}) => {
   );
 }
 
-const BarChart = ({data, color}) => {
+const BarChart = ({data, team}) => {
+  let direction = team===1?'row':'row-reverse';
   let total = 0;
   data.forEach((d) => {
     total += d[1];
   });
 
-
   let subBars = [];
   data.forEach((d,i) => {
-    if (!heroAvatar[d[0]]) console.log(d[0])
     subBars.push(
-      <Box
-        key={i} overflow='hidden' wrap direction='row'
-        height='100%' width={`${d[1]/total*100}%`}
-        background={color} justify='center' align='center'>
-        <Box width={{min: '4px'}} height='100%'></Box>
-        <Box
-          width={{min:'32px'}} height='32px' round margin={{right:'4px'}}
-          background={`url(${heroAvatar[d[0]]}), white`}
-          border={{color:'white', size:'2px', side:'all', style:'solid'}}>
-        </Box>
-      </Box>
+      <SubBar key={i} percent={d[1]/total*100} hero={d[0]} team={team}/>
     );
   });
 
   return(
     <Box
       width='295px' height='40px' gap='xxxsmall'
-      direction='row'>
+      direction={direction}>
       {subBars}
     </Box>
   )
 }
 
-const ValueChart = ({value, max, color}) => {
+const SubBar = ({percent, hero, team}) => {
+  const [position, setPosition] = useState(null);
+  const mouseUp = useMouseUp();
+
+  return (
+    <Box height='100%' width={`${percent}%`} style={{position:'relative'}}>
+      <Box
+        direction='row' fill wrap overflow='hidden'
+        justify='center' align='center' background={teamToColor(team)}
+        onMouseMove={(event) => {
+          if (!mouseUp) return;
+          let rect;
+          if (event.target.id === 'icon') {
+            rect = event.target.parentElement.getBoundingClientRect();
+          } else {
+            rect =  event.target.getBoundingClientRect()
+          }
+          if (rect.width > 40) return;
+
+          setPosition([team===2?-2:rect.width+2,rect.height/2]);
+        }}
+        onMouseOut={() => {
+          setPosition(null);
+        }}>
+        <Box id='icon' width={{min: '4px'}} height='100%'></Box>
+        <Box
+          id='icon' background={`url(${heroAvatar[hero]}), white`}
+          width={{min:'32px'}} height='32px' round margin={{right:'xxsmall'}}
+          border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+        </Box>
+      </Box>
+      {position && (
+        <Box
+          style={{
+            position: 'absolute', width: 'fit-content', maxWidth: 'none',
+            left:`${position[0]}px`, top:`${position[1]}px`,
+            transform: `translate(${team===2?'-100%':'0%'},-50%)`,
+            zIndex: 1000
+          }}
+          background={{color:'black',opacity:0.5}} round='xxsmall'>
+          <Box style={{whiteSpace:'nowrap'}}>
+            <Box
+              background={`url(${heroAvatar[hero]}), white`}
+              width='32px' height='32px' round margin='xxsmall'
+              border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+            </Box>
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+const ValueChart = ({value, max, team}) => {
   return(
     <Box justify='between' background='backgroundLight'>
       <Text
@@ -130,10 +173,10 @@ const ValueChart = ({value, max, color}) => {
         {value}
       </Text>
       <Box
-        background={{color:color, opacity:0.2}}
+        background={{color:teamToColor(team), opacity:0.2}}
         height='8px' width='128px'
-        align={color==='red'?'end':'start'}>
-        <Box background={color} height='8px' width={`${value/max*100}%`}>
+        align={team===2?'end':'start'}>
+        <Box background={teamToColor(team)} height='8px' width={`${value/max*100}%`}>
         </Box>
       </Box>
     </Box>
@@ -212,23 +255,3 @@ const calcElim = (data, range, team) => {
   });
   return elim;
 }
-
-// const UltBar = (props) => {
-//   return(
-//     <Box>
-//     </Box>
-//   )
-// }
-//
-// const DeathBar = (props) => {
-//   return(
-//     <ValueBar value={3} max={10}/>
-//   )
-// }
-//
-// const ElimBar = ({data, player, range}) => {
-//
-//   return(
-//     <ValueBar value={elim} max={30}/>
-//   )
-// }
