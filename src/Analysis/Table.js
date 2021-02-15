@@ -9,17 +9,17 @@ const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
 
 export const Table = ({data, team, range, hide, onHide}) => {
-  const [select, setSelect] = useState(null);
-  const [top, setTop] = useState(null);
-  const [topOffset, setTopOffset] = useState(null);
+  const [select, setSelect] = useState(null); // Selected player
+  const [top, setTop] = useState(null); // Top for hovering row
+  const [topOffset, setTopOffset] = useState(null); // Top offset to the hold point
   const [order, setOrder] = useState(teamToPlayers(team));
-  const [areaOrder, setAreaOrder] = useState(teamToPlayers(team));
+  const [areaOrder, setAreaOrder] = useState(teamToPlayers(team)); // Order for the underneath interaction area, synced with order after drag is completed
   const mouseUp = useContext(MouseUpContext);
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (mouseUp) {
-      console.log('mouse up');
+      // console.log('mouse up');
       setSelect(null);
       setTop(null);
       setAreaOrder(order);
@@ -92,7 +92,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
     );
   }
 
-  // If press a draggable component, start dragging.
+  // For mouse, selct when mouse is down
   const onPress = (event) => {
     let rowNode = event.target.closest("[id^='row']");
     if (!rowNode) return;
@@ -107,7 +107,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
     setTop(calcTop(clientY, topOffsetNew, rect));
     setTopOffset(topOffsetNew);
     setSelect(player);
-    console.log('start',player)
   }
 
   // While moving above component, handle hover or drag.
@@ -119,31 +118,45 @@ export const Table = ({data, team, range, hide, onHide}) => {
       console.log(hero)
       // Handle hover
     } else {
-      if (!select) return;
-      console.log('move')
-      let rect = containerRef.current.getBoundingClientRect();
-      let clientY = event.touches?event.touches[0].clientY:event.clientY;
-      let topNew = calcTop(clientY, topOffset, rect)
-      setTop(topNew);
+      if (!select && event.touches) {
+        // For touch, only select when move starts
+        onPress(event);
+      }
 
-      let i = order.indexOf(select);
-      let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
-      if (i !== iNew) { // Reorder
-        let orderNew = [...order];
-        orderNew.splice(i, 1);
-        orderNew.splice(iNew, 0, select);
-        setOrder(orderNew);
+      if (select) {
+        // Same moving logic if moving and selected
+        let rect = containerRef.current.getBoundingClientRect();
+        let clientY = event.touches?event.touches[0].clientY:event.clientY;
+        let topNew = calcTop(clientY, topOffset, rect);
+        setTop(topNew);
+
+        let i = order.indexOf(select);
+        let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
+        if (i !== iNew) { // Reorder
+          let orderNew = [...order];
+          orderNew.splice(i, 1);
+          orderNew.splice(iNew, 0, select);
+          setOrder(orderNew);
+        }
       }
     }
   }
 
   // If press moves out of component, move to top or bottom.
   const onOut = (event) => {
-    if (!select || mouseUp) return;
-    if (event.changedTouches) event.preventDefault();
-    let rect = containerRef.current.getBoundingClientRect();
-    let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
-    setTop(calcTop(clientY, topOffset, rect));
+    if (event.changedTouches) {
+      event.preventDefault(); // Prevent triggering on mouse move
+      // Handle tap
+      if (!event.target.id.includes('sub-bar')) return;
+      let idArray = event.target.id.split('-');
+      let hero = idArray[idArray.length-1];
+      console.log(hero)
+    } else {
+      if (!select) return;
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
+      setTop(calcTop(clientY, topOffset, rect));
+    }
   }
 
   return(
@@ -173,7 +186,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
               onMouseDown={onPress}
               onMouseMove={onMove}
               onMouseLeave={onOut}
-              onTouchStart={onPress}
               onTouchMove={onMove}
               onTouchEnd={onOut}>
               {rowAreas}
@@ -333,7 +345,7 @@ const ValueChart = ({value, max, team}) => {
     <ValueContainer>
       <Box fill justify='between' background='backgroundLight'>
         <Text
-          style={{lineHeight: '24px'}}
+          style={{lineHeight:'24px',userSelect:'none'}}
           weight={700} size='20px' color='blue'
           margin={{vertical:'xxsmall', left:'xsmall'}}>
           {value}
