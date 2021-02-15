@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Text } from 'grommet';
-import { Down } from 'grommet-icons';
+import { Down, Up } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { heroAvatar } from '../assets/assets';
 import { useMouseUp, teamToColor } from '../utils';
 
-export const Table = ({data, team, range}) => {
+const ROW_HEIGHT = 56;
+const ROW_GAP = 12;
+
+export const Table = ({data, team, range, hide, onHide}) => {
+  const [select, setSelect] = useState(null);
+  const [top, setTop] = useState(null);
+  const [topOffset, setTopOffset] = useState(null);
+  const [order, setOrder] = useState(teamToPlayers(team));
+  const mouseUp = useMouseUp();
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (mouseUp) {
+      setSelect(null);
+      setTop(null);
+    }
+  },[mouseUp]);
+
   let color = teamToColor(team);
   let direction = team===1?'row':'row-reverse';
   let heroData = calcHero(data, range, team);
@@ -25,20 +42,55 @@ export const Table = ({data, team, range}) => {
   teamToPlayers(team).forEach((player) => {
     if (elimMax < elimData[player]) elimMax = elimData[player];
   })
+
   let playerRows = [];
-  teamToPlayers(team).forEach((player) => {
-    playerRows.push(
-      <Box
-        key={player} direction={direction}
-        height='52px' gap='xlarge' align='start' justify='between'
-        border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
-        <BarChart data={heroData[player]} team={team}/>
-        <ValueChart value={ultData[player]} max={ultMax} team={team}/>
-        <ValueChart value={deathData[player]} max={deathMax} team={team}/>
-        <ValueChart value={elimData[player]} max={elimMax} team={team}/>
-      </Box>
-    );
+  order.forEach((player, i) => {
+    if (player === select) {
+      playerRows.push(
+        <PlayerRowEmpty key={player}/>
+      );
+    } else {
+      playerRows.push(
+        <PlayerRow
+          key={player} player={player} team={team}
+          hero={heroData[player]}
+          ult={ultData[player]} ultMax={ultMax}
+          death={deathData[player]} deathMax={deathMax}
+          elim={elimData[player]} elimMax={elimMax}
+          onSelect={(player, clientY, topOffsetNew) => {
+            let rect = containerRef.current.getBoundingClientRect();
+            setTop(calcTop(clientY, topOffsetNew, rect));
+            setTopOffset(topOffsetNew);
+            setSelect(player);
+          }}/>
+      );
+    }
+    // Manual gap
+    if (i < 5) {
+      playerRows.push(
+        <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
+      )
+    }
   });
+
+  let playerRowHover = null;
+  if (select) {
+    let player = select
+    playerRowHover = (
+      <PlayerRow
+        key={player} player={player} team={team}
+        hero={heroData[player]}
+        ult={ultData[player]} ultMax={ultMax}
+        death={deathData[player]} deathMax={deathMax}
+        elim={elimData[player]} elimMax={elimMax}
+        onSelect={(player, clientY, topOffsetNew) => {
+          let rect = containerRef.current.getBoundingClientRect();
+          setTop(calcTop(clientY, topOffsetNew, rect));
+          setTopOffset(topOffsetNew);
+          setSelect(player);
+        }}/>
+    );
+  }
 
   return(
     <StatBox fill='horizontal' pad='medium' justify='start'>
@@ -49,28 +101,125 @@ export const Table = ({data, team, range}) => {
         <Box
           justify='center' align='center'
           width='36px' height='36px'
-          onClick={() => {}}>
-          <Down size='16px' color='text'/>
+          onClick={() => {if (onHide) onHide(!hide)}}>
+          {hide?(
+            <Down size='16px' color='text'/>
+          ):(
+            <Up size='16px' color='text'/>
+          )}
         </Box>
-        <Text>{`队伍${team}`}</Text>
+        <Text weight={700} color={teamToColor(team)}>{`队伍${team}`}</Text>
       </Box>
-      <Box gap='medium' margin={{top: 'small'}}>
-        <Box
-          direction={direction}
-          background='background' height='48px' gap='xlarge'
-          justify='between' align='start'
-          border={{color:'line', size:'2px', side:'bottom', style:'solid'}}>
-          <BarTitle label='英雄'/>
-          <ValueTitle label='大招'/>
-          <ValueTitle label='死亡'/>
-          <ValueTitle label='击杀'/>
+      {!hide && (
+        <Box>
+          <TitleRow team={team}/>
+          <Box
+            ref={containerRef}
+            style={{position:'relative'}}
+            onMouseMove={(event) => {
+              if (!select || mouseUp) return;
+              let rect = containerRef.current.getBoundingClientRect();
+              let topNew = calcTop(event.clientY, topOffset, rect)
+              setTop(topNew);
+
+              let i = order.indexOf(select)
+              let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
+              // console.log(topNew, i, iNew)
+              if (i !== iNew) { // Reorder
+                let orderNew = [...order];
+                orderNew.splice(i, 1);
+                orderNew.splice(iNew, 0, select);
+                setOrder(orderNew);
+              }
+            }}
+            onMouseOut={(event) => {
+              if (!select || mouseUp) return;
+              let rect = containerRef.current.getBoundingClientRect();
+              setTop(calcTop(event.clientY, topOffset, rect));
+            }}>
+            {playerRows}
+            {top!==null && (
+              <Box
+                style={{
+                  position:'absolute', top:`${top}px`,
+                  left:'-8px', right:'-8px', maxWidth: 'none'
+                }}
+                pad={{horizontal:'6px'}}
+                height={`${ROW_HEIGHT}px`} background='white' elevation='drag'
+                border={{color:'orangeLight', size:'2px', side:'all', style:'solid'}}>
+                {playerRowHover}
+              </Box>
+            )}
+          </Box>
         </Box>
-        {playerRows}
-      </Box>
+      )}
     </StatBox>
   );
 }
 
+const calcTop = (clientY, topOffset, rect) => {
+  let topNew = clientY-rect.top-topOffset;
+  if (topNew < 0) topNew = 0;
+  if (topNew > rect.height-ROW_HEIGHT) topNew = rect.height-ROW_HEIGHT;
+  return topNew
+}
+
+const PlayerRow = ({
+  player, team,
+  hero,
+  ult, ultMax,
+  death, deathMax,
+  elim, elimMax,
+  onSelect
+}) => {
+  const containerRef = useRef(null);
+  const direction = team===1?'row':'row-reverse';
+
+  return(
+    <Box
+      ref={containerRef}
+      onMouseDown={(event) => {
+        event.preventDefault(); // Prevent chrome from dragging text
+        let rect = containerRef.current.getBoundingClientRect()
+        if (onSelect) onSelect(player, event.clientY, event.clientY-rect.top);
+      }}>
+      <Box
+        direction={direction} height={`${ROW_HEIGHT}px`}
+        align='center' justify='between' gap='xlarge'
+        border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
+        <BarChart data={hero} team={team}/>
+        <ValueChart value={ult} max={ultMax} team={team}/>
+        <ValueChart value={death} max={deathMax} team={team}/>
+        <ValueChart value={elim} max={elimMax} team={team}/>
+      </Box>
+    </Box>
+  );
+}
+
+const PlayerRowEmpty = () => {
+  return (
+    <Box
+      fill='horizontal' background='backgroundLight' height={`${ROW_HEIGHT}px`}
+      border={{color:'lineLight', size:'1px', side:'all', style:'solid'}}>
+    </Box>
+  );
+}
+
+const TitleRow = ({team}) => {
+  let direction = team===1?'row':'row-reverse';
+  return (
+    <Box
+      direction={direction} height='48px'
+      margin={{vertical: 'small'}}
+      background='background' gap='xlarge' justify='between'
+      border={{color:'line', size:'2px', side:'bottom', style:'solid'}}>
+      <BarTitle label='英雄'/>
+      <ValueTitle label='大招'/>
+      <ValueTitle label='死亡'/>
+      <ValueTitle label='击杀'/>
+    </Box>
+  );
+}
 
 const BarTitle = ({label}) => {
   return (
@@ -103,9 +252,7 @@ const BarChart = ({data, team}) => {
   });
 
   return(
-    <Box
-      width='295px' height='40px' gap='xxxsmall'
-      direction={direction}>
+    <Box width='295px' height='40px' gap='xxxsmall' direction={direction}>
       {subBars}
     </Box>
   )
@@ -168,7 +315,8 @@ const ValueChart = ({value, max, team}) => {
   return(
     <Box justify='between' background='backgroundLight'>
       <Text
-        weight={700} size='20px' color='blue' style={{lineHeight: '24px'}}
+        style={{lineHeight: '24px'}}
+        weight={700} size='20px' color='blue'
         margin={{vertical:'xxsmall', left:'xsmall'}}>
         {value}
       </Text>

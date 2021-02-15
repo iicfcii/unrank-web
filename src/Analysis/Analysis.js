@@ -7,6 +7,7 @@ import data from '../assets/DEMO.json';
 
 export const Analysis = (props) => {
   const [range, setRange] = useState([0,data.time.data.length]);
+  const [hideTable, setHideTable] = useState(false);
 
   return(
     <Box
@@ -18,8 +19,12 @@ export const Analysis = (props) => {
         <Objective data={data} range={range} onRangeChange={setRange}/>
       </Box>
       <Box direction='row' gap='medium' fill='horizontal'>
-        <Table data={data} team={1} range={range}/>
-        <Table data={data} team={2} range={range}/>
+        <Table
+          team={1} data={data} range={range}
+          hide={hideTable} onHide={setHideTable}/>
+        <Table
+          team={2} data={data} range={range} 
+          hide={hideTable} onHide={setHideTable}/>
       </Box>
     </Box>
   );

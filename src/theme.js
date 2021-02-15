@@ -41,9 +41,27 @@ export const theme = {
       xxlarge: '64px',
       responsiveBreakpoint: 'small',
     },
+    breakpoints: {
+      small: {
+        value: 1024,
+        edgeSize: {
+          none: '0px',
+          hair: '1px',
+          xxxsmall: '2px',
+          xxsmall: '4px',
+          xsmall: '8px',
+          small: '12px',
+          medium: '24px',
+          large: '32px',
+          xlarge: '48px',
+          xxlarge: '64px',
+        },
+      },
+    },
     elevation: {
       light: {
         normal: '0px 0px 13px rgba(0, 0, 0, 0.05)',
+        drag: '0px 0px 7px rgba(0, 0, 0, 0.4)',
       }
     },
     input: {
@@ -102,5 +120,8 @@ export const theme = {
         </Box>
       )
     }
+  },
+  grommet: {
+    extend:'min-width:1024px;'
   }
 };
