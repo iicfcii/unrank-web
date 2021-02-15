@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Box, Chart, Stack, Text, Button } from 'grommet';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
-import { formatSeconds, useMouseUp } from '../utils';
+import { MouseUpContext, formatSeconds } from '../utils';
 
 export const Objective = ({data, range, onRangeChange}) => {
   const [hoverPt, setHoverPt] = useState(null);
   const [value, setValue] = useState(null);
   const [dataGroups, setDataGroups] = useState([]);
-  const mouseUp = useMouseUp();
+  const mouseUp = useContext(MouseUpContext);
 
   useEffect(() => {
     setDataGroups(toDataGroups(data, range));

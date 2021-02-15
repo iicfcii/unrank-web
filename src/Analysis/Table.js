@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Box, Text } from 'grommet';
 import { Down, Up } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { heroAvatar } from '../assets/assets';
-import { useMouseUp, teamToColor } from '../utils';
+import { MouseUpContext, teamToColor } from '../utils';
 
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
@@ -13,7 +13,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [top, setTop] = useState(null);
   const [topOffset, setTopOffset] = useState(null);
   const [order, setOrder] = useState(teamToPlayers(team));
-  const mouseUp = useMouseUp();
+  const mouseUp = useContext(MouseUpContext);
   const containerRef = useRef(null)
 
   useEffect(() => {
@@ -260,7 +260,7 @@ const BarChart = ({data, team}) => {
 
 const SubBar = ({percent, hero, team}) => {
   const [position, setPosition] = useState(null);
-  const mouseUp = useMouseUp();
+  const mouseUp = useContext(MouseUpContext);
 
   return (
     <Box height='100%' width={`${percent}%`} style={{position:'relative'}}>

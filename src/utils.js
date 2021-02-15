@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext } from 'react';
 
 export const teamToColor = (team) => {
   if (team === 2) return 'red';
@@ -13,6 +13,8 @@ export const formatSeconds = (s) => {
 
   return `${min}分${sec}秒`;
 }
+
+export const MouseUpContext = createContext(true);
 
 export const useMouseUp = () => {
   const [mouseUp, setMouseUp] = useState(true);
