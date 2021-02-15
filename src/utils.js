@@ -5,6 +5,10 @@ export const teamToColor = (team) => {
   return 'blue';
 }
 
+export const teamToRowDirection = (team) => {
+  return team===1?'row':'row-reverse';
+}
+
 export const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60
@@ -28,9 +32,13 @@ export const useMouseUp = () => {
     }
     document.addEventListener('mousedown', onMouseDown);
     document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('touchstart', onMouseDown);
+    document.addEventListener('touchend', onMouseUp);
     return () => {
       document.removeEventListener('mousedown', onMouseDown);
       document.removeEventListener('mouseup', onMouseUp);
+      document.removeEventListener('touchstart', onMouseDown);
+      document.removeEventListener('touchend', onMouseUp);
     }
   },[])
 

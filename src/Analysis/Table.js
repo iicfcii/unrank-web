@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Box, Text } from 'grommet';
+import { Box, Text, Stack } from 'grommet';
 import { Down, Up } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { heroAvatar } from '../assets/assets';
-import { MouseUpContext, teamToColor } from '../utils';
+import { MouseUpContext, teamToColor, teamToRowDirection } from '../utils';
 
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
@@ -13,15 +13,18 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [top, setTop] = useState(null);
   const [topOffset, setTopOffset] = useState(null);
   const [order, setOrder] = useState(teamToPlayers(team));
+  const [areaOrder, setAreaOrder] = useState(teamToPlayers(team));
   const mouseUp = useContext(MouseUpContext);
-  const containerRef = useRef(null)
+  const containerRef = useRef(null);
 
   useEffect(() => {
     if (mouseUp) {
+      console.log('mouse up');
       setSelect(null);
       setTop(null);
+      setAreaOrder(order);
     }
-  },[mouseUp]);
+  },[mouseUp, order]);
 
   let color = teamToColor(team);
   let direction = team===1?'row':'row-reverse';
@@ -43,53 +46,104 @@ export const Table = ({data, team, range, hide, onHide}) => {
     if (elimMax < elimData[player]) elimMax = elimData[player];
   })
 
-  let playerRows = [];
+  let rowAreas = [];
+  areaOrder.forEach((player, i) => {
+    rowAreas.push(
+      <RowArea key={player} player={player} team={team} hero={heroData[player]}/>
+    );
+    if (i < 5)
+    rowAreas.push(
+      <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
+    ); // Manual Gap
+  });
+
+  let rows = [];
   order.forEach((player, i) => {
-    if (player === select) {
-      playerRows.push(
-        <PlayerRowEmpty key={player}/>
+    if (select === player) {
+      rows.push(
+        <EmptyRow key={player}/>
       );
     } else {
-      playerRows.push(
-        <PlayerRow
+      rows.push(
+        <Row
           key={player} player={player} team={team}
           hero={heroData[player]}
           ult={ultData[player]} ultMax={ultMax}
           death={deathData[player]} deathMax={deathMax}
-          elim={elimData[player]} elimMax={elimMax}
-          onSelect={(player, clientY, topOffsetNew) => {
-            let rect = containerRef.current.getBoundingClientRect();
-            setTop(calcTop(clientY, topOffsetNew, rect));
-            setTopOffset(topOffsetNew);
-            setSelect(player);
-          }}/>
+          elim={elimData[player]} elimMax={elimMax}/>
       );
     }
-    // Manual gap
-    if (i < 5) {
-      playerRows.push(
-        <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
-      )
-    }
+    if (i < 5)
+    rows.push(
+      <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
+    ); // Manual Gap
   });
 
-  let playerRowHover = null;
+  let rowHover = null;
   if (select) {
-    let player = select
-    playerRowHover = (
-      <PlayerRow
+    let player = select;
+    rowHover = (
+      <Row
         key={player} player={player} team={team}
         hero={heroData[player]}
         ult={ultData[player]} ultMax={ultMax}
         death={deathData[player]} deathMax={deathMax}
-        elim={elimData[player]} elimMax={elimMax}
-        onSelect={(player, clientY, topOffsetNew) => {
-          let rect = containerRef.current.getBoundingClientRect();
-          setTop(calcTop(clientY, topOffsetNew, rect));
-          setTopOffset(topOffsetNew);
-          setSelect(player);
-        }}/>
+        elim={elimData[player]} elimMax={elimMax}/>
     );
+  }
+
+  // If press a draggable component, start dragging.
+  const onPress = (event) => {
+    let rowNode = event.target.closest("[id^='row']");
+    if (!rowNode) return;
+
+    if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
+    let idArray = rowNode.id.split('-');
+    let player = parseInt(idArray[idArray.length-1],10);
+    let rowRect = rowNode.getBoundingClientRect();
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.touches?event.touches[0].clientY:event.clientY;
+    let topOffsetNew = clientY-rowRect.top;
+    setTop(calcTop(clientY, topOffsetNew, rect));
+    setTopOffset(topOffsetNew);
+    setSelect(player);
+    console.log('start',player)
+  }
+
+  // While moving above component, handle hover or drag.
+  const onMove = (event) => {
+    if (mouseUp) {
+      if (!event.target.id.includes('sub-bar')) return;
+      let idArray = event.target.id.split('-');
+      let hero = idArray[idArray.length-1];
+      console.log(hero)
+      // Handle hover
+    } else {
+      if (!select) return;
+      console.log('move')
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientY = event.touches?event.touches[0].clientY:event.clientY;
+      let topNew = calcTop(clientY, topOffset, rect)
+      setTop(topNew);
+
+      let i = order.indexOf(select);
+      let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
+      if (i !== iNew) { // Reorder
+        let orderNew = [...order];
+        orderNew.splice(i, 1);
+        orderNew.splice(iNew, 0, select);
+        setOrder(orderNew);
+      }
+    }
+  }
+
+  // If press moves out of component, move to top or bottom.
+  const onOut = (event) => {
+    if (!select || mouseUp) return;
+    if (event.changedTouches) event.preventDefault();
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
+    setTop(calcTop(clientY, topOffset, rect));
   }
 
   return(
@@ -113,93 +167,97 @@ export const Table = ({data, team, range, hide, onHide}) => {
       {!hide && (
         <Box>
           <TitleRow team={team}/>
-          <Box
-            ref={containerRef}
-            style={{position:'relative'}}
-            onMouseMove={(event) => {
-              if (!select || mouseUp) return;
-              let rect = containerRef.current.getBoundingClientRect();
-              let topNew = calcTop(event.clientY, topOffset, rect)
-              setTop(topNew);
-
-              let i = order.indexOf(select)
-              let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
-              // console.log(topNew, i, iNew)
-              if (i !== iNew) { // Reorder
-                let orderNew = [...order];
-                orderNew.splice(i, 1);
-                orderNew.splice(iNew, 0, select);
-                setOrder(orderNew);
-              }
-            }}
-            onMouseOut={(event) => {
-              if (!select || mouseUp) return;
-              let rect = containerRef.current.getBoundingClientRect();
-              setTop(calcTop(event.clientY, topOffset, rect));
-            }}>
-            {playerRows}
-            {top!==null && (
-              <Box
-                style={{
-                  position:'absolute', top:`${top}px`,
-                  left:'-8px', right:'-8px', maxWidth: 'none'
-                }}
-                pad={{horizontal:'6px'}}
-                height={`${ROW_HEIGHT}px`} background='white' elevation='drag'
-                border={{color:'orangeLight', size:'2px', side:'all', style:'solid'}}>
-                {playerRowHover}
-              </Box>
-            )}
-          </Box>
+          <Stack interactiveChild='first'>
+            <Box
+              ref={containerRef}
+              onMouseDown={onPress}
+              onMouseMove={onMove}
+              onMouseLeave={onOut}
+              onTouchStart={onPress}
+              onTouchMove={onMove}
+              onTouchEnd={onOut}>
+              {rowAreas}
+            </Box>
+            <Box style={{position:'relative'}} fill>
+              {rows}
+              {select && (
+                <Box
+                  style={{
+                    position:'absolute', top:`${top}px`,
+                    left:'-8px', right:'-8px', maxWidth: 'none'
+                  }}
+                  pad={{horizontal:'6px'}} height={`${ROW_HEIGHT}px`}
+                  background='white' elevation='drag'
+                  border={{color:'orangeLight', size:'2px', side:'all', style:'solid'}}>
+                  {rowHover}
+                </Box>
+              )}
+            </Box>
+          </Stack>
         </Box>
       )}
     </StatBox>
   );
 }
 
-const calcTop = (clientY, topOffset, rect) => {
-  let topNew = clientY-rect.top-topOffset;
-  if (topNew < 0) topNew = 0;
-  if (topNew > rect.height-ROW_HEIGHT) topNew = rect.height-ROW_HEIGHT;
-  return topNew
-}
+// Interaction area
+const RowArea = ({player, team, hero}) => {
+  let total = 0;
+  hero.forEach((h) => total += h[1]);
 
-const PlayerRow = ({
-  player, team,
-  hero,
-  ult, ultMax,
-  death, deathMax,
-  elim, elimMax,
-  onSelect
-}) => {
-  const containerRef = useRef(null);
-  const direction = team===1?'row':'row-reverse';
-
-  return(
-    <Box
-      ref={containerRef}
-      onMouseDown={(event) => {
-        event.preventDefault(); // Prevent chrome from dragging text
-        let rect = containerRef.current.getBoundingClientRect()
-        if (onSelect) onSelect(player, event.clientY, event.clientY-rect.top);
-      }}>
+  let subBarAreas = [];
+  hero.forEach((h,i) => {
+    subBarAreas.push(
       <Box
-        direction={direction} height={`${ROW_HEIGHT}px`}
-        align='center' justify='between' gap='xlarge'
-        border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
-        <BarChart data={hero} team={team}/>
-        <ValueChart value={ult} max={ultMax} team={team}/>
-        <ValueChart value={death} max={deathMax} team={team}/>
-        <ValueChart value={elim} max={elimMax} team={team}/>
+        key={i} id={`sub-bar-${h[0]}`}
+        height='100%' width={`${h[1]/total*100}%`} background='red'>
       </Box>
+    );
+  });
+
+  return (
+    <Box
+      id={`row-${player}`} style={{touchAction: 'none'}}
+      direction={teamToRowDirection(team)} height={`${ROW_HEIGHT}px`}
+      align='center' justify='between' gap='xlarge'
+      border={{color:'black', size:'1px', side:'bottom', style:'solid'}}>
+      <BarContainer team={team}>
+        {subBarAreas}
+      </BarContainer>
+      <ValueContainer></ValueContainer>
+      <ValueContainer></ValueContainer>
+      <ValueContainer></ValueContainer>
     </Box>
   );
 }
 
-const PlayerRowEmpty = () => {
+const Row = ({
+  player, team,
+  hero,
+  ult, ultMax,
+  death, deathMax,
+  elim, elimMax
+}) => {
+  const direction = team===1?'row':'row-reverse';
+
+  return(
+    <Box
+      direction={direction} height={`${ROW_HEIGHT}px`}
+      align='center' justify='between' gap='xlarge' background='white'
+      border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
+      <BarChart data={hero} team={team}/>
+      <ValueChart value={ult} max={ultMax} team={team}/>
+      <ValueChart value={death} max={deathMax} team={team}/>
+      <ValueChart value={elim} max={elimMax} team={team}/>
+    </Box>
+  );
+}
+
+const EmptyRow = () => {
   return (
     <Box
-      fill='horizontal' background='backgroundLight' height={`${ROW_HEIGHT}px`}
+      height={`${ROW_HEIGHT}px`} fill='horizontal'
+      background='backgroundLight'
       border={{color:'lineLight', size:'1px', side:'all', style:'solid'}}>
     </Box>
   );
@@ -209,9 +267,9 @@ const TitleRow = ({team}) => {
   let direction = team===1?'row':'row-reverse';
   return (
     <Box
-      direction={direction} height='48px'
-      margin={{vertical: 'small'}}
-      background='background' gap='xlarge' justify='between'
+      direction={direction} height='48px' background='background'
+      justify='between' align='center'
+      gap='xlarge' margin={{vertical: 'small'}}
       border={{color:'line', size:'2px', side:'bottom', style:'solid'}}>
       <BarTitle label='英雄'/>
       <ValueTitle label='大招'/>
@@ -223,117 +281,133 @@ const TitleRow = ({team}) => {
 
 const BarTitle = ({label}) => {
   return (
-    <Box width='295px' height='100%' justify='center' align='center'>
-      <Text size='medium'>{label}</Text>
-    </Box>
+    <BarContainer>
+      <Box fill justify='center' align='center'>
+        <Text size='medium'>{label}</Text>
+      </Box>
+    </BarContainer>
   );
 }
 
 const ValueTitle = ({label}) => {
   return (
-    <Box width='128px' height='100%' justify='center' align='center'>
-      <Text size='medium'>{label}</Text>
-    </Box>
+    <ValueContainer>
+      <Box fill justify='center' align='center'>
+        <Text size='medium'>{label}</Text>
+      </Box>
+    </ValueContainer>
   );
 }
 
 const BarChart = ({data, team}) => {
-  let direction = team===1?'row':'row-reverse';
   let total = 0;
-  data.forEach((d) => {
-    total += d[1];
-  });
+  data.forEach((d) => total += d[1]);
 
   let subBars = [];
   data.forEach((d,i) => {
     subBars.push(
-      <SubBar key={i} percent={d[1]/total*100} hero={d[0]} team={team}/>
+      <Box key={i} height='100%' width={`${d[1]/total*100}%`} style={{position:'relative'}}>
+        <Box
+          direction='row' fill wrap overflow='hidden'
+          justify='center' align='center' background={teamToColor(team)}>
+          <Box id='icon' width={{min: '4px'}} height='100%'></Box>
+          <Box
+            id='icon' background={`url(${heroAvatar[d[0]]}), white`}
+            width={{min:'32px'}} height='32px' round margin={{right:'xxsmall'}}
+            border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+          </Box>
+        </Box>
+      </Box>
     );
   });
 
   return(
-    <Box width='295px' height='40px' gap='xxxsmall' direction={direction}>
+    <BarContainer team={team}>
       {subBars}
-    </Box>
-  )
-}
-
-const SubBar = ({percent, hero, team}) => {
-  const [position, setPosition] = useState(null);
-  const mouseUp = useContext(MouseUpContext);
-
-  return (
-    <Box height='100%' width={`${percent}%`} style={{position:'relative'}}>
-      <Box
-        direction='row' fill wrap overflow='hidden'
-        justify='center' align='center' background={teamToColor(team)}
-        onMouseMove={(event) => {
-          if (!mouseUp) return;
-          let rect;
-          if (event.target.id === 'icon') {
-            rect = event.target.parentElement.getBoundingClientRect();
-          } else {
-            rect =  event.target.getBoundingClientRect()
-          }
-          if (rect.width > 40) return;
-
-          setPosition([team===2?-2:rect.width+2,rect.height/2]);
-        }}
-        onMouseOut={() => {
-          setPosition(null);
-        }}>
-        <Box id='icon' width={{min: '4px'}} height='100%'></Box>
-        <Box
-          id='icon' background={`url(${heroAvatar[hero]}), white`}
-          width={{min:'32px'}} height='32px' round margin={{right:'xxsmall'}}
-          border={{color:'white', size:'2px', side:'all', style:'solid'}}>
-        </Box>
-      </Box>
-      {position && (
-        <Box
-          style={{
-            position: 'absolute', width: 'fit-content', maxWidth: 'none',
-            left:`${position[0]}px`, top:`${position[1]}px`,
-            transform: `translate(${team===2?'-100%':'0%'},-50%)`,
-            zIndex: 1000
-          }}
-          background={{color:'black',opacity:0.5}} round='xxsmall'>
-          <Box style={{whiteSpace:'nowrap'}}>
-            <Box
-              background={`url(${heroAvatar[hero]}), white`}
-              width='32px' height='32px' round margin='xxsmall'
-              border={{color:'white', size:'2px', side:'all', style:'solid'}}>
-            </Box>
-          </Box>
-        </Box>
-      )}
-    </Box>
+    </BarContainer>
   );
 }
 
 const ValueChart = ({value, max, team}) => {
   return(
-    <Box justify='between' background='backgroundLight'>
-      <Text
-        style={{lineHeight: '24px'}}
-        weight={700} size='20px' color='blue'
-        margin={{vertical:'xxsmall', left:'xsmall'}}>
-        {value}
-      </Text>
-      <Box
-        background={{color:teamToColor(team), opacity:0.2}}
-        height='8px' width='128px'
-        align={team===2?'end':'start'}>
-        <Box background={teamToColor(team)} height='8px' width={`${value/max*100}%`}>
+    <ValueContainer>
+      <Box fill justify='between' background='backgroundLight'>
+        <Text
+          style={{lineHeight: '24px'}}
+          weight={700} size='20px' color='blue'
+          margin={{vertical:'xxsmall', left:'xsmall'}}>
+          {value}
+        </Text>
+        <Box
+          background={{color:teamToColor(team), opacity:0.2}}
+          height='8px' align={team===2?'end':'start'}>
+          <Box background={teamToColor(team)} height='8px' width={`${value/max*100}%`}>
+          </Box>
         </Box>
       </Box>
+    </ValueContainer>
+  )
+}
+
+const BarContainer = (props) => {
+  return(
+    <Box
+      width='295px' height='40px'
+      gap='xxxsmall' direction={teamToRowDirection(props.team)}>
+      {props.children}
     </Box>
   )
 }
 
+const ValueContainer = (props) => {
+  return(
+    <Box width='128px' height='40px'>
+      {props.children}
+    </Box>
+  )
+}
+
+// {position && (
+//   <Box
+//     style={{
+//       position: 'absolute', width: 'fit-content', maxWidth: 'none',
+//       left:`${position[0]}px`, top:`${position[1]}px`,
+//       transform: `translate(${team===2?'-100%':'0%'},-50%)`,
+//       zIndex: 1000
+//     }}
+//     background={{color:'black',opacity:0.5}} round='xxsmall'>
+//     <Box style={{whiteSpace:'nowrap'}}>
+//       <Box
+//         background={`url(${heroAvatar[hero]}), white`}
+//         width='32px' height='32px' round margin='xxsmall'
+//         border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+//       </Box>
+//     </Box>
+//   </Box>
+// )}
+
+// const calcPosition = (event, team) => {
+//   let rect;
+//   if (event.target.id === 'icon') {
+//     rect = event.target.parentElement.getBoundingClientRect();
+//   } else {
+//     rect =  event.target.getBoundingClientRect()
+//   }
+//   if (rect.width > 40) return null;
+//
+//   return [team===2?-2:rect.width+2,rect.height/2]
+// }
+
 const teamToPlayers = (team) => {
   if (team === 2) return [7,8,9,10,11,12];
   return [1,2,3,4,5,6];
+}
+
+const calcTop = (clientY, topOffset, rect) => {
+  let topNew = clientY-rect.top-topOffset;
+  if (topNew < 0) topNew = 0;
+  if (topNew > rect.height-ROW_HEIGHT) topNew = rect.height-ROW_HEIGHT;
+  return topNew
 }
 
 const calcHero = (data, range, team) => {
