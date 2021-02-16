@@ -15,19 +15,9 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [movingOutside, setMovingOutside] = useState(false); // Indicates mouse pressed and moving out of table
   const [order, setOrder] = useState(teamToPlayers(team));
   const [areaOrder, setAreaOrder] = useState(teamToPlayers(team)); // Order for the underneath interaction area, synced with order after drag is completed
+  const [hoverInfo, setHoverInfo] = useState(null);
   const mouseUp = useContext(MouseUpContext);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (mouseUp) {
-      // console.log('mouse up');
-      setSelect(null);
-      setTop(null);
-      setAreaOrder(order);
-      setMovingOutside(false);
-    }
-  },[mouseUp, order]);
-
 
   let color = teamToColor(team);
   let direction = team===1?'row':'row-reverse';
@@ -48,6 +38,115 @@ export const Table = ({data, team, range, hide, onHide}) => {
   teamToPlayers(team).forEach((player) => {
     if (elimMax < elimData[player]) elimMax = elimData[player];
   })
+
+  // For mouse, selct when mouse is down
+  const onPress = (event) => {
+    setHoverInfo(null);
+    let rowNode = event.target.closest("[id^='row']");
+    if (!rowNode) return;
+
+    if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
+    let idArray = rowNode.id.split('-');
+    let player = parseInt(idArray[idArray.length-1],10);
+    let rowRect = rowNode.getBoundingClientRect();
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.touches?event.touches[0].clientY:event.clientY;
+    let topOffsetNew = clientY-rowRect.top;
+    setTop(calcTop(clientY, topOffsetNew, rect));
+    setTopOffset(topOffsetNew);
+    setSelect(player);
+  }
+
+  // While moving above component, handle hover or drag.
+  const onMove = (event) => {
+    if (mouseUp && !event.touches) {
+      onHover(event); // Handle hover
+    } else {
+      if (!select && event.touches) {
+        onPress(event); // For touch, only select when move starts
+      }
+      if (select) {
+        onSelectAndMove(event);
+        setMovingOutside(false);
+      }
+    }
+  }
+
+  // If pressed and moved out of component, move to top or bottom.
+  const onOut = (event) => {
+    setHoverInfo(null);
+    if (event.changedTouches) {
+      event.preventDefault(); // Prevent triggering on mouse move
+      onHover(event);
+    } else {
+      if (!select) return;
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
+      setTop(calcTop(clientY, topOffset, rect));
+      setMovingOutside(true);
+    }
+  }
+
+  const onSelectAndMove = useCallback((event) => {
+    // Same moving logic if moving and selected
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.touches?event.touches[0].clientY:event.clientY;
+    let topNew = calcTop(clientY, topOffset, rect);
+    setTop(topNew);
+
+    let i = order.indexOf(select);
+    let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
+    if (i !== iNew) { // Reorder
+      let orderNew = [...order];
+      orderNew.splice(i, 1);
+      orderNew.splice(iNew, 0, select);
+      setOrder(orderNew);
+    }
+  }, [select, order, topOffset]);
+
+  const onHover = (event) => {
+    let rect;
+    if (event.target.id.includes('sub-bar')){
+      rect =  event.target.getBoundingClientRect();
+    }
+
+    if (
+      !rect ||
+      rect.width > 40 ||
+      (event.touches && hoverInfo)
+    ) {
+      setHoverInfo(null);
+      return;
+    }
+
+    let idArray = event.target.id.split('-');
+    let hero = idArray[idArray.length-1];
+    let rectContainer =  containerRef.current.getBoundingClientRect();
+    let left = rect.left-rectContainer.left+(team===2?-2:rect.width+2);
+    let top = rect.top-rectContainer.top+rect.height/2;
+    setHoverInfo([left,top,hero]);
+  }
+
+  // Handle mouse or touch release
+  useEffect(() => {
+    if (mouseUp) {
+      setSelect(null);
+      setTop(null);
+      setAreaOrder(order);
+      setMovingOutside(false);
+    }
+  },[mouseUp, order]);
+
+  // Handle mouse move when outside table
+  useEffect(() => {
+    let onMouseMove = (event) => {
+      if (movingOutside) onSelectAndMove(event);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', onMouseMove);
+    }
+  },[movingOutside, onSelectAndMove])
 
   let rowAreas = [];
   areaOrder.forEach((player, i) => {
@@ -95,93 +194,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
     );
   }
 
-  // For mouse, selct when mouse is down
-  const onPress = (event) => {
-    let rowNode = event.target.closest("[id^='row']");
-    if (!rowNode) return;
-
-    if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
-    let idArray = rowNode.id.split('-');
-    let player = parseInt(idArray[idArray.length-1],10);
-    let rowRect = rowNode.getBoundingClientRect();
-    let rect = containerRef.current.getBoundingClientRect();
-    let clientY = event.touches?event.touches[0].clientY:event.clientY;
-    let topOffsetNew = clientY-rowRect.top;
-    setTop(calcTop(clientY, topOffsetNew, rect));
-    setTopOffset(topOffsetNew);
-    setSelect(player);
-  }
-
-  // While moving above component, handle hover or drag.
-  const onMove = (event) => {
-    if (mouseUp) {
-      if (!event.target.id.includes('sub-bar')) return;
-      let idArray = event.target.id.split('-');
-      let hero = idArray[idArray.length-1];
-      console.log(hero)
-      // Handle hover
-    } else {
-      if (!select && event.touches) {
-        // For touch, only select when move starts
-        onPress(event);
-      }
-
-      if (select) {
-        onSelectAndMove(event);
-        setMovingOutside(false);
-      }
-    }
-  }
-
-  const onSelectAndMove = useCallback((event) => {
-    // Same moving logic if moving and selected
-    let rect = containerRef.current.getBoundingClientRect();
-    let clientY = event.touches?event.touches[0].clientY:event.clientY;
-    let topNew = calcTop(clientY, topOffset, rect);
-    setTop(topNew);
-
-    let i = order.indexOf(select);
-    let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
-    if (i !== iNew) { // Reorder
-      let orderNew = [...order];
-      orderNew.splice(i, 1);
-      orderNew.splice(iNew, 0, select);
-      setOrder(orderNew);
-    }
-  }, [select, order, topOffset]);
-
-
-  // If press moves out of component, move to top or bottom.
-  const onOut = (event) => {
-    if (event.changedTouches) {
-      event.preventDefault(); // Prevent triggering on mouse move
-      // Handle tap
-      if (!event.target.id.includes('sub-bar')) return;
-      let idArray = event.target.id.split('-');
-      let hero = idArray[idArray.length-1];
-      console.log(hero)
-    } else {
-      if (!select) return;
-      let rect = containerRef.current.getBoundingClientRect();
-      let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
-      setTop(calcTop(clientY, topOffset, rect));
-      setMovingOutside(true);
-    }
-  }
-
-  // Handle mouse move when out side table
-  useEffect(() => {
-    let onMouseMove = (event) => {
-      if (select && movingOutside) {
-        onSelectAndMove(event);
-      }
-    };
-    document.addEventListener('mousemove', onMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', onMouseMove);
-    }
-  },[select, movingOutside, onSelectAndMove])
-
   return(
     <StatBox id='table' fill='horizontal' pad='medium' justify='start'>
       <Box
@@ -228,6 +240,21 @@ export const Table = ({data, team, range, hide, onHide}) => {
                 </Box>
               )}
             </Box>
+            <Box fill style={{position: 'relative'}}>
+              {hoverInfo && (
+                <Box
+                  style={{
+                    position:'absolute',maxWidth: 'none',
+                    top:`${hoverInfo[1]}px`,left:`${hoverInfo[0]}px`,
+                    transform: `translate(${team===2?'-100%':'0%'},-50%)`,
+                    zIndex: 1000, whiteSpace:'nowrap'
+                  }}
+                  pad={{left:'4px'}} round='xxsmall'
+                  background={{color:'black',opacity:0.5}}>
+                  <HeroAvatar avatar={heroAvatar[hoverInfo[2]]}/>
+                </Box>
+              )}
+            </Box>
           </Stack>
         </Box>
       )}
@@ -252,7 +279,7 @@ const RowArea = ({player, team, hero}) => {
 
   return (
     <Box
-      id={`row-${player}`} style={{touchAction: 'none'}}
+      id={`row-${player}`} style={{touchAction:'none'}}
       direction={teamToRowDirection(team)} height={`${ROW_HEIGHT}px`}
       align='center' justify='between' gap='xlarge'
       border={{color:'black', size:'1px', side:'bottom', style:'solid'}}>
@@ -346,11 +373,7 @@ const BarChart = ({data, team}) => {
           direction='row' fill wrap overflow='hidden'
           justify='center' align='center' background={teamToColor(team)}>
           <Box id='icon' width={{min: '4px'}} height='100%'></Box>
-          <Box
-            id='icon' background={`url(${heroAvatar[d[0]]}), white`}
-            width={{min:'32px'}} height='32px' round margin={{right:'xxsmall'}}
-            border={{color:'white', size:'2px', side:'all', style:'solid'}}>
-          </Box>
+          <HeroAvatar avatar={heroAvatar[d[0]]}/>
         </Box>
       </Box>
     );
@@ -394,6 +417,16 @@ const BarContainer = (props) => {
   )
 }
 
+const HeroAvatar = ({avatar}) => {
+  return (
+    <Box
+      background={`url(${avatar}), white`}
+      width='32px' height='32px' round margin={{vertical:'xxsmall', right:'4px'}}
+      border={{color:'white', size:'2px', side:'all', style:'solid'}}>
+    </Box>
+  )
+}
+
 const ValueContainer = (props) => {
   return(
     <Box width='128px' height='40px'>
@@ -401,25 +434,6 @@ const ValueContainer = (props) => {
     </Box>
   )
 }
-
-// {position && (
-//   <Box
-//     style={{
-//       position: 'absolute', width: 'fit-content', maxWidth: 'none',
-//       left:`${position[0]}px`, top:`${position[1]}px`,
-//       transform: `translate(${team===2?'-100%':'0%'},-50%)`,
-//       zIndex: 1000
-//     }}
-//     background={{color:'black',opacity:0.5}} round='xxsmall'>
-//     <Box style={{whiteSpace:'nowrap'}}>
-//       <Box
-//         background={`url(${heroAvatar[hero]}), white`}
-//         width='32px' height='32px' round margin='xxsmall'
-//         border={{color:'white', size:'2px', side:'all', style:'solid'}}>
-//       </Box>
-//     </Box>
-//   </Box>
-// )}
 
 // const calcPosition = (event, team) => {
 //   let rect;

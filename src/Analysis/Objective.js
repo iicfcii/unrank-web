@@ -139,7 +139,7 @@ export const Objective = ({data, range, onRangeChange}) => {
                   ${value[0]>(range[1]-range[0])/2?'-100%':'0%'},
                   ${value[1]<50?'-100%':'0%'}
                 )`,
-                width: 'fit-content'
+                maxWidth: 'none', whiteSpace:'nowrap'
               }}
               background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
               <Box direction='row'>
