@@ -151,7 +151,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
   let rowAreas = [];
   areaOrder.forEach((player, i) => {
     rowAreas.push(
-      <RowArea key={player} player={player} team={team} hero={heroData[player]}/>
+      <RowArea key={player} player={player} team={team} hero={heroData[player]} select={select}/>
     );
     if (i < 5)
     rowAreas.push(
@@ -218,6 +218,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
           <Stack interactiveChild='first'>
             <Box
               ref={containerRef}
+              style={{cursor:select?'grabbing':'auto'}}
               onMouseDown={onPress}
               onMouseMove={onMove}
               onMouseLeave={onOut}
@@ -263,7 +264,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
 }
 
 // Interaction area
-const RowArea = ({player, team, hero}) => {
+const RowArea = ({player, team, hero, select}) => {
   let total = 0;
   hero.forEach((h) => total += h[1]);
 
@@ -279,7 +280,8 @@ const RowArea = ({player, team, hero}) => {
 
   return (
     <Box
-      id={`row-${player}`} style={{touchAction:'none'}}
+      id={`row-${player}`}
+      style={{touchAction:'none',cursor:select?'grabbing':'grab'}}
       direction={teamToRowDirection(team)} height={`${ROW_HEIGHT}px`}
       align='center' justify='between' gap='xlarge'
       border={{color:'black', size:'1px', side:'bottom', style:'solid'}}>
