@@ -21,7 +21,7 @@ export const Objective = ({data, range, onRangeChange}) => {
     let key = range[0].toString()+range[1].toString();
     if (g.color === 'none') {
       areaCharts.push(
-        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' type='area' thickness='0px'
@@ -31,7 +31,7 @@ export const Objective = ({data, range, onRangeChange}) => {
       );
     } else {
       areaCharts.push(
-        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' color={{color: g.color, opacity: '0.2'}}
@@ -49,7 +49,7 @@ export const Objective = ({data, range, onRangeChange}) => {
     let key = range[0].toString()+range[1].toString();
     if (g.color === 'none') {
       lineCharts.push(
-        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' type='line' thickness='0px'
@@ -59,7 +59,7 @@ export const Objective = ({data, range, onRangeChange}) => {
       );
     } else {
       lineCharts.push(
-        <Box key={i} fill='vertical' width={length/(range[1]-range[0])*100+'%'}>
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' round color={g.color}

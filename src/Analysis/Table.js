@@ -273,7 +273,7 @@ const RowArea = ({player, team, hero, select}) => {
     subBarAreas.push(
       <Box
         key={i} id={`sub-bar-${h[0]}`}
-        height='100%' width={`${h[1]/total*100}%`} background='red'>
+        height='100%' style={{width:`${h[1]/total*100}%`}} background='red'>
       </Box>
     );
   });
@@ -370,7 +370,7 @@ const BarChart = ({data, team}) => {
   let subBars = [];
   data.forEach((d,i) => {
     subBars.push(
-      <Box key={i} height='100%' width={`${d[1]/total*100}%`} style={{position:'relative'}}>
+      <Box key={i} height='100%' style={{position:'relative',width:`${d[1]/total*100}%`}}>
         <Box
           direction='row' fill wrap overflow='hidden'
           justify='center' align='center' background={teamToColor(team)}>
@@ -401,7 +401,7 @@ const ValueChart = ({value, max, team}) => {
         <Box
           background={{color:teamToColor(team), opacity:0.2}}
           height='8px' align={team===2?'end':'start'}>
-          <Box background={teamToColor(team)} height='8px' width={`${value/max*100}%`}>
+          <Box background={teamToColor(team)} height='8px' style={{width:`${value/max*100}%`}}>
           </Box>
         </Box>
       </Box>
@@ -436,18 +436,6 @@ const ValueContainer = (props) => {
     </Box>
   )
 }
-
-// const calcPosition = (event, team) => {
-//   let rect;
-//   if (event.target.id === 'icon') {
-//     rect = event.target.parentElement.getBoundingClientRect();
-//   } else {
-//     rect =  event.target.getBoundingClientRect()
-//   }
-//   if (rect.width > 40) return null;
-//
-//   return [team===2?-2:rect.width+2,rect.height/2]
-// }
 
 const teamToPlayers = (team) => {
   if (team === 2) return [7,8,9,10,11,12];

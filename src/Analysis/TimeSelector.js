@@ -14,7 +14,9 @@ export const TimeSelector = ({range, max, onChange}) => {
   const [rtViewLeft, setRTViewLeft] = useState(null);
 
   const [select, setSelect] = useState(null);
-  const [pressed, setPressed] = useState(false);
+  const [barOffset, setBarOffset] = useState(null);
+
+  const [pressed, setPressed] = useState(null);
   const [mouseLeft, setMouseLeft] = useState(null);
 
   const onRange = (range, max, width) => {
@@ -27,29 +29,42 @@ export const TimeSelector = ({range, max, onChange}) => {
     if (!event.touches) event.preventDefault(); // Prevent text selection
     if (event.target.id === 'left' || event.target.id === 'right') {
       setSelect(event.target.id);
+    } else if (event.target.id ==='bar') {
+      setPressed('bar');
     } else {
-      setPressed(true);
+      setPressed('outside');
     }
   }
 
   const onMove = useCallback((event) => {
+    if (!containerRef.current) return;
+
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientX = event.touches?event.touches[0].clientX:event.clientX;
+    let left = clientX-rect.left;
+
     if (select) {
-      let rect = containerRef.current.getBoundingClientRect();
-      let clientX = event.touches?event.touches[0].clientX:event.clientX;
-      let left = clientX-rect.left;
       if (left < 0) left = 0;
       if (left > rect.width-THUMB_WIDTH) left = rect.width-THUMB_WIDTH;
       setMouseLeft(left);
-      let rangeNew = toRange(left, select, rect.width, ltLeft, rtLeft, max);
+      let rangeNew = toRange(left, select, rect.width, ltLeft, rtLeft, max, barOffset);
       let thumbsLeft = onRange(rangeNew, max, rect.width);
       setLTViewLeft(thumbsLeft[0]);
       setRTViewLeft(thumbsLeft[1]);
       if (onChange) onChange(rangeNew);
     }
-    setPressed(false);
-  },[select, ltLeft, rtLeft, max, onChange])
 
-  const toRange = (left, select, width, ltLeft, rtLeft, max) => {
+    if (pressed === 'bar') {
+      let thumbsLeft = onRange(range, max, rect.width);
+      setSelect('bar');
+      setBarOffset(left-thumbsLeft[0]);
+    }
+
+    setPressed(null);
+
+  },[select, ltLeft, rtLeft, max, onChange, barOffset, pressed, range])
+
+  const toRange = (left, select, width, ltLeft, rtLeft, max, offset) => {
     let leftValue; let rightValue;
 
     const toValue = (l) => {
@@ -64,19 +79,31 @@ export const TimeSelector = ({range, max, onChange}) => {
       leftValue = toValue(left);
       rightValue = toValue(rtLeft+THUMB_WIDTH);
       if (valueTooClose(leftValue, rightValue)) leftValue -= 1;
-    } else {
+    } else if (select === 'right') {
       if (left < ltLeft+THUMB_WIDTH) left = ltLeft+THUMB_WIDTH;
       leftValue = toValue(ltLeft);
       rightValue = toValue(left+THUMB_WIDTH);
       if (valueTooClose(leftValue, rightValue)) rightValue += 1;
-    }
+    } else {
 
+      let barLeft = left-offset;
+      let barRight = barLeft+(rtLeft-ltLeft)+THUMB_WIDTH;
+      let totalLength = barRight-barLeft;
+      if (barLeft < 0) {
+        barLeft = 0;
+        barRight = totalLength;
+      } else if (barRight > width) {
+        barLeft = width-totalLength;
+        barRight = width;
+      } else {
+      }
+      leftValue = toValue(barLeft);
+      rightValue = toValue(barRight);
+    }
     return [leftValue, rightValue];
   }
 
   const onRelease = useCallback((event) => {
-    if (event.cancelable) event.preventDefault(); // Prevent triggering mouse down
-
     let selected = select;
     let left = mouseLeft;
     let rect = containerRef.current.getBoundingClientRect();
@@ -87,20 +114,21 @@ export const TimeSelector = ({range, max, onChange}) => {
       let rDist = Math.abs((clientX-rect.left)-(rtLeft+THUMB_WIDTH));
       selected = lDist < rDist?'left':'right';
       left = clientX-rect.left;
-      setPressed(false);
+      setPressed(null);
     }
 
     if (selected) {
-      let rangeNew = toRange(left, selected, rect.width, ltLeft, rtLeft, max);
+      let rangeNew = toRange(left, selected, rect.width, ltLeft, rtLeft, max, barOffset);
       let thumbsLeft = onRange(rangeNew, max, rect.width);
       setLTLeft(thumbsLeft[0]);
       setRTLeft(thumbsLeft[1]);
       setLTViewLeft(thumbsLeft[0]);
       setRTViewLeft(thumbsLeft[1]);
       setSelect(null);
+      setBarOffset(null);
       if (onChange) onChange(rangeNew);
     }
-  },[select, rtLeft, ltLeft, onChange, max, mouseLeft, pressed]);
+  },[select, rtLeft, ltLeft, onChange, max, mouseLeft, pressed, barOffset]);
 
   // Handle resize and first time
   useEffect(() => {
@@ -139,10 +167,14 @@ export const TimeSelector = ({range, max, onChange}) => {
 
   let barLeft;
   let barRight;
+  let barViewLeft;
+  let barViewRight;
   if (containerRef.current) {
     let rect = containerRef.current.getBoundingClientRect();
-    barLeft = ltViewLeft;
-    barRight = rect.width-rtViewLeft-THUMB_WIDTH;
+    barLeft = ltLeft;
+    barRight = rect.width-rtLeft-THUMB_WIDTH;
+    barViewLeft = ltViewLeft;
+    barViewRight = rect.width-rtViewLeft-THUMB_WIDTH;
   }
 
   return(
@@ -157,22 +189,19 @@ export const TimeSelector = ({range, max, onChange}) => {
             fill
             onMouseDown={onStart}
             onTouchStart={onStart}
-            onTouchMove={onMove}>
-            <ThumbArea id='left' left={ltLeft} hidden/>
-            <ThumbArea id='right' left={rtLeft} hidden/>
+            onTouchMove={onMove}
+            onTouchEnd={(event) => {
+               // Prevent triggering mouse down when touch started
+              if (event.touches && event.cancelable) event.preventDefault();
+            }}>
+            <Bar id='bar' left={barLeft} right={barRight} hidden/>
+            <Thumb id='left' left={ltLeft} hidden/>
+            <Thumb id='right' left={rtLeft} hidden/>
           </Box>
           <Box fill background='background'>
-            <Box
-              style={{
-                position:'absolute',
-                top:'0px',bottom:'0px',
-                left:`${barLeft}px`,
-                right:`${barRight}px`,
-              }}
-              background={{color:'orange',opacity:0.2}}>
-            </Box>
-            <ThumbArea left={ltViewLeft}/>
-            <ThumbArea left={rtViewLeft}/>
+            <Bar left={barViewLeft} right={barViewRight}/>
+            <Thumb left={ltViewLeft}/>
+            <Thumb left={rtViewLeft}/>
           </Box>
         </Stack>
       </Box>
@@ -180,7 +209,22 @@ export const TimeSelector = ({range, max, onChange}) => {
   );
 }
 
-const ThumbArea = ({id, left, hidden}) => {
+const Bar = ({id, left, right, hidden}) => {
+  return (
+    <Box
+      id={id}
+      style={{
+        position:'absolute',
+        top:'0px',bottom:'0px',
+        left:`${left}px`,
+        right:`${right}px`,
+      }}
+      background={!hidden?{color:'orange',opacity:0.2}:'none'}>
+    </Box>
+  );
+}
+
+const Thumb = ({id, left, hidden}) => {
   return (
     <Box
       id={id}
