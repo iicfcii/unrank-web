@@ -1,0 +1,192 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Box, Text, Stack } from 'grommet';
+import { formatSeconds } from '../utils';
+
+// const SHADOW_STYLE = '0px 0px 5px rgba(0, 0, 0, 0.2)';
+const THUMB_WIDTH = 12;
+
+export const TimeSelector = ({range, max, onChange}) => {
+  const containerRef = useRef(null);
+  const [ltLeft, setLTLeft] = useState(null);
+  const [rtLeft, setRTLeft] = useState(null);
+
+  const [ltViewLeft, setLTViewLeft] = useState(null);
+  const [rtViewLeft, setRTViewLeft] = useState(null);
+
+  const [select, setSelect] = useState(null);
+  const [pressed, setPressed] = useState(false);
+  const [mouseLeft, setMouseLeft] = useState(null);
+
+  const onRange = (range, max, width) => {
+    let left = range[0]/max*width;
+    let right = range[1]/max*width-THUMB_WIDTH;
+    return [left, right];
+  }
+
+  const onStart = (event) => {
+    if (!event.touches) event.preventDefault(); // Prevent text selection
+    if (event.target.id === 'left' || event.target.id === 'right') {
+      setSelect(event.target.id);
+    } else {
+      setPressed(true);
+    }
+  }
+
+  const onMove = useCallback((event) => {
+    if (select) {
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientX = event.touches?event.touches[0].clientX:event.clientX;
+      let left = clientX-rect.left;
+      if (left < 0) left = 0;
+      if (left > rect.width-THUMB_WIDTH) left = rect.width-THUMB_WIDTH;
+      setMouseLeft(left);
+      let rangeNew = toRange(left, select, rect.width, ltLeft, rtLeft, max);
+      let thumbsLeft = onRange(rangeNew, max, rect.width);
+      setLTViewLeft(thumbsLeft[0]);
+      setRTViewLeft(thumbsLeft[1]);
+    }
+    setPressed(false);
+  },[select, ltLeft, rtLeft, max])
+
+  const toRange = (left, select, width, ltLeft, rtLeft, max) => {
+    let leftValue; let rightValue;
+
+    const toValue = (l) => {
+      return Math.round(l/width*max);
+    }
+    const valueTooClose = (lV, rV) => {
+      return Math.abs(lV-rV)*width/max < 2*THUMB_WIDTH;
+    }
+
+    if (select === 'left') {
+      if (left > rtLeft-THUMB_WIDTH) left = rtLeft-THUMB_WIDTH;
+      leftValue = toValue(left);
+      rightValue = toValue(rtLeft+THUMB_WIDTH);
+      if (valueTooClose(leftValue, rightValue)) leftValue -= 1;
+    } else {
+      if (left < ltLeft+THUMB_WIDTH) left = ltLeft+THUMB_WIDTH;
+      leftValue = toValue(ltLeft);
+      rightValue = toValue(left+THUMB_WIDTH);
+      if (valueTooClose(leftValue, rightValue)) rightValue += 1;
+    }
+
+    return [leftValue, rightValue];
+  }
+
+  const onRelease = useCallback((event) => {
+    if (event.cancelable) event.preventDefault(); // Prevent triggering mouse down
+
+    let selected = select;
+    let left = mouseLeft;
+    let rect = containerRef.current.getBoundingClientRect();
+
+    if (pressed) {
+      let clientX = event.changedTouches?event.changedTouches[0].clientX:event.clientX;
+      let lDist = Math.abs(clientX-ltLeft);
+      let rDist = Math.abs(clientX-(rtLeft+THUMB_WIDTH));
+      selected = lDist < rDist?'left':'right';
+      left = clientX-rect.left;
+      setPressed(false);
+    }
+
+    if (selected) {
+      let rangeNew = toRange(left, selected, rect.width, ltLeft, rtLeft, max);
+      let thumbsLeft = onRange(rangeNew, max, rect.width);
+      setLTLeft(thumbsLeft[0]);
+      setRTLeft(thumbsLeft[1]);
+      setLTViewLeft(thumbsLeft[0]);
+      setRTViewLeft(thumbsLeft[1]);
+      setSelect(null);
+      if (onChange) onChange(rangeNew);
+    }
+  },[select, rtLeft, ltLeft, onChange, max, mouseLeft, pressed]);
+
+  // Handle resize and first time
+  useEffect(() => {
+    const onResize = () => {
+      let rect = containerRef.current.getBoundingClientRect();
+      let thumbsLeft = onRange(range, max, rect.width);
+      setLTLeft(thumbsLeft[0]);
+      setRTLeft(thumbsLeft[1]);
+      setLTViewLeft(thumbsLeft[0]);
+      setRTViewLeft(thumbsLeft[1]);
+    }
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+    }
+  },[max, range]);
+
+  // Handle mouse move from document so that mouse does not need to stay inside element
+  useEffect(() => {
+    document.addEventListener('mousemove', onMove);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+    }
+  },[onMove])
+
+  // Handle release
+  useEffect(() => {
+    document.addEventListener('mouseup', onRelease);
+    document.addEventListener('touchend', onRelease);
+    return () => {
+      document.removeEventListener('mouseup', onRelease);
+      document.removeEventListener('touchend', onRelease);
+    }
+  },[select, onRelease, mouseLeft])
+
+  let rect = containerRef.current.getBoundingClientRect();
+  let barLeft = ltViewLeft;
+  let barRight = rect.width-rtViewLeft-THUMB_WIDTH;
+
+  return(
+    <Box>
+      <Box direction='row' margin={{top:'xxsmall', bottom:'xsmall'}} justify='between' flex={false}>
+        <Text size='small'>{formatSeconds(range[0])}</Text>
+        <Text size='small'>{formatSeconds(range[1])}</Text>
+      </Box>
+      <Box ref={containerRef} height='8px' justify='center'>
+        <Stack fill interactiveChild='first'>
+          <Box
+            fill
+            onMouseDown={onStart}
+            onTouchStart={onStart}
+            onTouchMove={onMove}>
+            <ThumbArea id='left' left={ltLeft} hidden/>
+            <ThumbArea id='right' left={rtLeft} hidden/>
+          </Box>
+          <Box fill background='background'>
+            <Box
+              style={{
+                position:'absolute',
+                top:'0px',bottom:'0px',
+                left:`${barLeft}px`,
+                right:`${barRight}px`,
+              }}
+              background={{color:'orange',opacity:0.2}}>
+            </Box>
+            <ThumbArea left={ltViewLeft}/>
+            <ThumbArea left={rtViewLeft}/>
+          </Box>
+        </Stack>
+      </Box>
+    </Box>
+  );
+}
+
+const ThumbArea = ({id, left, hidden}) => {
+  return (
+    <Box
+      id={id}
+      style={{
+        touchAction:'none',
+        position:'absolute',
+        top:'-4px',left:`${left}px`,
+        boxShadow: !hidden?'0px 0px 5px rgba(0, 0, 0, 0.2)':'none'
+      }}
+      background={!hidden?'orange':undefined} flex={false}
+      width={`${THUMB_WIDTH}px`} height='16px' round='xxxsmall'>
+    </Box>
+  );
+}

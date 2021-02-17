@@ -61,7 +61,7 @@ export const theme = {
     elevation: {
       light: {
         normal: '0px 0px 13px rgba(0, 0, 0, 0.05)',
-        drag: '0px 0px 7px rgba(0, 0, 0, 0.4)',
+        drag: '0px 0px 8px rgba(0, 0, 0, 0.3)',
       }
     },
     input: {
