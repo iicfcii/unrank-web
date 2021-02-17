@@ -97,15 +97,22 @@ export const theme = {
           horizontal: '16px',
           vertical: '6px'
         }
+      },
+      medium: {
+        border: {
+          radius: '4px'
+        },
+        pad: {
+          horizontal: '16px',
+          vertical: '8px'
+        }
       }
     },
     border: {
       width: '0px'
     },
     primary: {
-      font: {
-        weight: 700,
-      },
+      extend: `font-weight:700;`
     }
   },
   rangeSelector: {

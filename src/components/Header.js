@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useRouteMatch } from "react-router-dom";
-import { Box, Text } from 'grommet';
+import { Box, Text, Button } from 'grommet';
+import { Analytics } from 'grommet-icons';
 
 const HOME_LABEL = '首页';
 const DEMO_LABEL = '示例';
@@ -25,7 +26,7 @@ export const Header = (props) => {
   return(
     <Box
       direction='row' background='white'
-      height='80px' pad={{horizontal:'large'}}
+      height='64px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'bottom', style:'solid'}}>
       <Box flex={false} justify='center'>
         <Text weight={900} size='xxlarge'>UNRANK</Text>
@@ -42,12 +43,10 @@ export const Header = (props) => {
           to={'/about'}/>
       </Box>
       <Box fill justify='center' align='end'>
-        <Link to={'/about'} style={{display:'flex', textDecoration:'none'}}>
-          <Box
-            pad={{horizontal:'medium', vertical:'xsmall'}} round='xxsmall'
-            justify='center' align='center' background='orange'>
-            <Text weight={700} size='medium' color='white'>分析</Text>
-          </Box>
+        <Link to={'/about'} style={{textDecoration:'none'}}>
+          <Button
+            primary label='分析' size='medium' gap='xsmall'
+            icon={<Analytics color='white' size='24px'/>}/>
         </Link>
       </Box>
     </Box>
@@ -61,7 +60,7 @@ const Item = (props) => {
     <Link to={props.to} style={{display:'flex', textDecoration:'none'}}>
       <Box
         background={select?'orange':'white'} justify='center'
-        pad={{horizontal:'large'}}
+        pad={{horizontal:'medium'}}
         border={select?{color:'orangeLight', size:'medium', side:'bottom', style:'solid'}:null}>
         <Text size='large' color={select?'white':'text'}>
           {props.label}

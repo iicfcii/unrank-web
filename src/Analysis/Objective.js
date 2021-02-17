@@ -185,8 +185,8 @@ export const Objective = ({data, range, onRangeChange}) => {
           </Box>
         </Stack>
         <TimeSelector
-          data={data}
           range={[range[0],range[1]-1]}
+          max={data.time.data.length-1}
           onChange={(values) => {
             let rangeNew = [values[0],values[1]+1]
             setDataGroups(toDataGroups(data, rangeNew));
