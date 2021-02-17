@@ -163,7 +163,7 @@ export const TimeSelector = ({range, max, onChange}) => {
       document.removeEventListener('mouseup', onRelease);
       document.removeEventListener('touchend', onRelease);
     }
-  },[select, onRelease, mouseLeft])
+  },[onRelease])
 
   let barLeft;
   let barRight;
@@ -179,11 +179,9 @@ export const TimeSelector = ({range, max, onChange}) => {
 
   return(
     <Box>
-      <Box direction='row' margin={{top:'xxsmall', bottom:'xsmall'}} justify='between' flex={false}>
-        <Text size='small'>{formatSeconds(range[0])}</Text>
-        <Text size='small'>{formatSeconds(range[1])}</Text>
-      </Box>
-      <Box ref={containerRef} height='8px' justify='center' flex={false}>
+      <Box
+        ref={containerRef} height='8px' justify='center' flex={false}
+        margin={{top:'xsmall', bottom:'xxsmall'}}>
         <Stack fill interactiveChild='first'>
           <Box
             fill
@@ -204,6 +202,10 @@ export const TimeSelector = ({range, max, onChange}) => {
             <Thumb left={rtViewLeft}/>
           </Box>
         </Stack>
+      </Box>
+      <Box direction='row' justify='between' flex={false}>
+        <Text size='small'>{formatSeconds(range[0])}</Text>
+        <Text size='small'>{formatSeconds(range[1])}</Text>
       </Box>
     </Box>
   );

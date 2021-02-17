@@ -10,18 +10,24 @@ export const Objective = ({data, range, onRangeChange}) => {
   const [dataGroups, setDataGroups] = useState([]);
   const mouseUp = useContext(MouseUpContext);
 
+  // useEffect(() => {
+  //   setDataGroups(toDataGroups(data, range));
+  // },[data, range]);
+
+  const totalRange = [0,data.time.data.length];
+
   useEffect(() => {
-    setDataGroups(toDataGroups(data, range));
-  },[data, range]);
+    setDataGroups(toDataGroups(data, [0,data.time.data.length]));
+  },[data]);
 
   let areaCharts = [];
   dataGroups.forEach((g, i) => {
     let length = g.values.length;
     // Change the key based on states so that Chart will rerender
-    let key = range[0].toString()+range[1].toString();
+    let key = range[0].toString()+totalRange[1].toString();
     if (g.color === 'none') {
       areaCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box key={i} fill='vertical' style={{width:length/(totalRange[1]-totalRange[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' type='area' thickness='0px'
@@ -31,7 +37,7 @@ export const Objective = ({data, range, onRangeChange}) => {
       );
     } else {
       areaCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box key={i} fill='vertical' style={{width:length/(totalRange[1]-totalRange[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' color={{color: g.color, opacity: '0.2'}}
@@ -46,10 +52,10 @@ export const Objective = ({data, range, onRangeChange}) => {
   let lineCharts = [];
   dataGroups.forEach((g, i) => {
     let length = g.values.length;
-    let key = range[0].toString()+range[1].toString();
+    let key = totalRange[0].toString()+totalRange[1].toString();
     if (g.color === 'none') {
       lineCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box key={i} fill='vertical' style={{width:length/(totalRange[1]-totalRange[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' type='line' thickness='0px'
@@ -59,7 +65,7 @@ export const Objective = ({data, range, onRangeChange}) => {
       );
     } else {
       lineCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box key={i} fill='vertical' style={{width:length/(totalRange[1]-totalRange[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' round color={g.color}
@@ -129,14 +135,14 @@ export const Objective = ({data, range, onRangeChange}) => {
               border={{color:value[2]===1?'blue':'red', size:'4px', side:'all', style:'solid'}}>
             </Box>
           )}
-          {value && range && hoverPt && (
+          {value && totalRange && hoverPt && (
             <Box
               style={{
                 position: 'absolute',
-                left:`${hoverPt[0]+(value[0]>(range[1]-range[0])/2?-8:8)}px`,
+                left:`${hoverPt[0]+(value[0]>(totalRange[1]-totalRange[0])/2?-8:8)}px`,
                 top:`${hoverPt[1]+(value[1]<50?-8:8)}px`,
                 transform: `translate(
-                  ${value[0]>(range[1]-range[0])/2?'-100%':'0%'},
+                  ${value[0]>(totalRange[1]-totalRange[0])/2?'-100%':'0%'},
                   ${value[1]<50?'-100%':'0%'}
                 )`,
                 maxWidth: 'none', whiteSpace:'nowrap'
@@ -166,7 +172,7 @@ export const Objective = ({data, range, onRangeChange}) => {
               let x = event.clientX - rect.left;
               // let y = event.clientY - rect.top;
 
-              let t = Math.round(x/rect.width*(range[1]-range[0]))+range[0];
+              let t = Math.round(x/rect.width*(totalRange[1]-totalRange[0]))+totalRange[0];
               let p = data.objective.progress[t];
               let status = data.objective.status;
 
@@ -189,7 +195,7 @@ export const Objective = ({data, range, onRangeChange}) => {
           max={data.time.data.length-1}
           onChange={(values) => {
             let rangeNew = [values[0],values[1]+1]
-            setDataGroups(toDataGroups(data, rangeNew));
+            // setDataGroups(toDataGroups(data, rangeNew));
             if(onRangeChange) onRangeChange(rangeNew);
           }}/>
       </Box>
@@ -235,15 +241,15 @@ const chartColor = (s) => {
   return 'none';
 }
 
-const toDataGroups = (data, range) => {
+const toDataGroups = (data, totalRange) => {
   let status = data.objective.status;
   let progress = data.objective.progress;
 
-  let prevT = range[0];
+  let prevT = totalRange[0];
   let prevS = status[prevT];
   let dataGroupsNew = [{color: chartColor(prevS), values: []}];
   let groupIndex = 0;
-  for (let t = range[0]; t < range[1]; t++) {
+  for (let t = totalRange[0]; t < totalRange[1]; t++) {
     let s = status[t];
     if (
       (s > 0 && prevS <= 0) ||
