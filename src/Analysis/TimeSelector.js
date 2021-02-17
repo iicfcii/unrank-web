@@ -190,7 +190,7 @@ export const TimeSelector = ({range, max, onChange}) => {
             onTouchMove={onMove}
             onTouchEnd={(event) => {
                // Prevent triggering mouse down when touch started
-              if (event.touches && event.cancelable) event.preventDefault();
+              if (event.cancelable) event.preventDefault();
             }}>
             <Bar id='bar' left={barLeft} right={barRight} hidden/>
             <Thumb id='left' left={ltLeft} hidden/>

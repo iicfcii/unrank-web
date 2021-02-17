@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, Stack } from 'grommet';
 import { Down, Up } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { heroAvatar } from '../assets/assets';
-import { MouseUpContext, teamToColor, teamToRowDirection } from '../utils';
+import { teamToColor, teamToRowDirection } from '../utils';
 
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
@@ -12,11 +12,9 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [select, setSelect] = useState(null); // Selected player
   const [top, setTop] = useState(null); // Top for hovering row
   const [topOffset, setTopOffset] = useState(null); // Top offset to the hold point
-  const [movingOutside, setMovingOutside] = useState(false); // Indicates mouse pressed and moving out of table
   const [order, setOrder] = useState(teamToPlayers(team));
   const [areaOrder, setAreaOrder] = useState(teamToPlayers(team)); // Order for the underneath interaction area, synced with order after drag is completed
   const [hoverInfo, setHoverInfo] = useState(null);
-  const mouseUp = useContext(MouseUpContext);
   const containerRef = useRef(null);
 
   let color = teamToColor(team);
@@ -39,8 +37,17 @@ export const Table = ({data, team, range, hide, onHide}) => {
     if (elimMax < elimData[player]) elimMax = elimData[player];
   })
 
-  // For mouse, selct when mouse is down
-  const onPress = (event) => {
+  const inside = (event) => {
+    // Make sure hovering inside container
+    // May be triggered by other table
+    let containerRect = containerRef.current.getBoundingClientRect();
+    let clientX = event.changedTouches?event.changedTouches[0].clientX:event.clientX;
+    let x = clientX-containerRect.left;
+    if (x < 0 || x > containerRect.width) return false;
+    return true
+  }
+
+  const onStart = (event) => {
     setHoverInfo(null);
     let rowNode = event.target.closest("[id^='row']");
     if (!rowNode) return;
@@ -57,54 +64,9 @@ export const Table = ({data, team, range, hide, onHide}) => {
     setSelect(player);
   }
 
-  // While moving above component, handle hover or drag.
-  const onMove = (event) => {
-    if (mouseUp && !event.touches) {
-      onHover(event); // Handle hover
-    } else {
-      if (!select && event.touches) {
-        onPress(event); // For touch, only select when move starts
-      }
-      if (select) {
-        onSelectAndMove(event);
-        setMovingOutside(false);
-      }
-    }
-  }
+  const onHover = useCallback((event) => {
+    if (!inside(event)) return;
 
-  // If pressed and moved out of component, move to top or bottom.
-  const onOut = (event) => {
-    setHoverInfo(null);
-    if (event.changedTouches) {
-      event.preventDefault(); // Prevent triggering on mouse move
-      onHover(event);
-    } else {
-      if (!select) return;
-      let rect = containerRef.current.getBoundingClientRect();
-      let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
-      setTop(calcTop(clientY, topOffset, rect));
-      setMovingOutside(true);
-    }
-  }
-
-  const onSelectAndMove = useCallback((event) => {
-    // Same moving logic if moving and selected
-    let rect = containerRef.current.getBoundingClientRect();
-    let clientY = event.touches?event.touches[0].clientY:event.clientY;
-    let topNew = calcTop(clientY, topOffset, rect);
-    setTop(topNew);
-
-    let i = order.indexOf(select);
-    let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
-    if (i !== iNew) { // Reorder
-      let orderNew = [...order];
-      orderNew.splice(i, 1);
-      orderNew.splice(iNew, 0, select);
-      setOrder(orderNew);
-    }
-  }, [select, order, topOffset]);
-
-  const onHover = (event) => {
     let rect;
     if (event.target.id.includes('sub-bar')){
       rect =  event.target.getBoundingClientRect();
@@ -125,28 +87,66 @@ export const Table = ({data, team, range, hide, onHide}) => {
     let left = rect.left-rectContainer.left+(team===2?-2:rect.width+2);
     let top = rect.top-rectContainer.top+rect.height/2;
     setHoverInfo([left,top,hero]);
-  }
+  }, [hoverInfo, team]);
 
-  // Handle mouse or touch release
-  useEffect(() => {
-    if (mouseUp) {
-      setSelect(null);
-      setTop(null);
-      setAreaOrder(order);
-      setMovingOutside(false);
+  const onMove = useCallback((event) => {
+    // Same logic for mouse or touch moving
+    const onDrag = () => {
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientY = event.touches?event.touches[0].clientY:event.clientY;
+      let topNew = calcTop(clientY, topOffset, rect);
+      setTop(topNew);
+
+      let i = order.indexOf(select);
+      let iNew = Math.floor((topNew+ROW_HEIGHT/2+ROW_GAP/2)/(ROW_HEIGHT+ROW_GAP));
+      if (i !== iNew) { // Reorder
+        let orderNew = [...order];
+        orderNew.splice(i, 1);
+        orderNew.splice(iNew, 0, select);
+        setOrder(orderNew);
+      }
     }
-  },[mouseUp, order]);
 
-  // Handle mouse move when outside table
+    if (event.touches) {
+      if (!select) {
+        onStart(event); // Only select when moves for touch
+      } else{
+        onDrag();
+      }
+    } else {
+      if (!select) {
+        onHover(event);
+      } else {
+        onDrag();
+      }
+    }
+  }, [select, onHover, order, topOffset]);
+
+  const onRelease = useCallback((event) => {
+    if (event.touches) {
+      onHover(event);
+    }
+
+    setSelect(null);
+    setTop(null);
+    setAreaOrder(order);
+  },[order, onHover]);
+
   useEffect(() => {
-    let onMouseMove = (event) => {
-      if (movingOutside) onSelectAndMove(event);
-    };
-    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mousemove', onMove);
     return () => {
-      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mousemove', onMove);
     }
-  },[movingOutside, onSelectAndMove])
+  },[onMove])
+
+  useEffect(() => {
+    document.addEventListener('mouseup', onRelease);
+    document.addEventListener('touchend', onRelease);
+    return () => {
+      document.removeEventListener('mouseup', onRelease);
+      document.removeEventListener('touchend', onRelease);
+    }
+  },[onRelease])
 
   let rowAreas = [];
   areaOrder.forEach((player, i) => {
@@ -219,11 +219,11 @@ export const Table = ({data, team, range, hide, onHide}) => {
             <Box
               ref={containerRef}
               style={{cursor:select?'grabbing':'auto'}}
-              onMouseDown={onPress}
-              onMouseMove={onMove}
-              onMouseLeave={onOut}
+              onMouseDown={onStart}
               onTouchMove={onMove}
-              onTouchEnd={onOut}>
+              onTouchEnd={(event) => {
+                if (event.cancelable) event.preventDefault();
+              }}>
               {rowAreas}
             </Box>
             <Box style={{position:'relative'}} fill>
@@ -272,8 +272,8 @@ const RowArea = ({player, team, hero, select}) => {
   hero.forEach((h,i) => {
     subBarAreas.push(
       <Box
-        key={i} id={`sub-bar-${h[0]}`}
-        height='100%' style={{width:`${h[1]/total*100}%`}} background='red'>
+        key={i} id={`sub-bar-${h[0]}`} height='100%'
+        style={{width:`${h[1]/total*100}%`, cursor:'default'}}>
       </Box>
     );
   });
@@ -370,7 +370,9 @@ const BarChart = ({data, team}) => {
   let subBars = [];
   data.forEach((d,i) => {
     subBars.push(
-      <Box key={i} height='100%' style={{position:'relative',width:`${d[1]/total*100}%`}}>
+      <Box
+        key={i} height='100%'
+        style={{position:'relative',width:`${d[1]/total*100}%`}}>
         <Box
           direction='row' fill wrap overflow='hidden'
           justify='center' align='center' background={teamToColor(team)}>
