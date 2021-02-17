@@ -38,8 +38,8 @@ export const Table = ({data, team, range, hide, onHide}) => {
   })
 
   const inside = (event) => {
-    // Make sure hovering inside container
-    // May be triggered by other table
+    if (!containerRef.current) return false;
+    // Make sure hovering inside container, may be triggered by other table
     let containerRect = containerRef.current.getBoundingClientRect();
     let clientX = event.changedTouches?event.changedTouches[0].clientX:event.clientX;
     let x = clientX-containerRect.left;
