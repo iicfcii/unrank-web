@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, Stack } from 'grommet';
 import { StatBox } from './StatBox';
-import { TeamHeader } from '../components/TeamHeader';
+import { TeamHeader } from './TeamHeader';
 import { heroAvatar } from '../assets/assets';
 import { teamToColor, teamToRowDirection } from '../utils';
 

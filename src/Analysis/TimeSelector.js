@@ -114,6 +114,7 @@ export const TimeSelector = ({range, max, onChange}) => {
       let rDist = Math.abs((clientX-rect.left)-(rtLeft+THUMB_WIDTH));
       selected = lDist < rDist?'left':'right';
       left = clientX-rect.left;
+      left = selected==='left'?left:left-THUMB_WIDTH;
       setPressed(null);
     }
 
@@ -157,11 +158,11 @@ export const TimeSelector = ({range, max, onChange}) => {
 
   // Handle release
   useEffect(() => {
-    document.addEventListener('mouseup', onRelease);
-    document.addEventListener('touchend', onRelease);
+    window.addEventListener('mouseup', onRelease);
+    window.addEventListener('touchend', onRelease);
     return () => {
-      document.removeEventListener('mouseup', onRelease);
-      document.removeEventListener('touchend', onRelease);
+      window.removeEventListener('mouseup', onRelease);
+      window.removeEventListener('touchend', onRelease);
     }
   },[onRelease])
 

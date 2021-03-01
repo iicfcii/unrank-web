@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Box, Chart, Stack, Text, Button } from 'grommet';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
-import { TeamHeader } from '../components/TeamHeader';
+import { TeamHeader } from './TeamHeader';
 import { MouseUpContext, formatSeconds, teamToColor, toValuesGroups } from '../utils';
 
 export const Detail = ({team, data, range, onRangeChange}) => {
