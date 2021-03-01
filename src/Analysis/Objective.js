@@ -223,7 +223,7 @@ const GridLineBottom = (props) => {
   return (
     <Box
       style={{position:'relative'}}
-      fill border={{color:'text', size:'1px', side:'bottom', style:'solid'}}>
+      fill border={{color:'line', size:'1px', side:'bottom', style:'solid'}}>
       <Box
         style={{
           position:'absolute', left:'-12px', bottom: '0px',

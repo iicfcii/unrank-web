@@ -1,26 +1,40 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Chart, Stack, Text, Button } from 'grommet';
+import { Box, Chart, Stack, Text } from 'grommet';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
-import { MouseUpContext, formatSeconds, teamToColor, toValuesGroups } from '../utils';
+import { MouseUpContext, formatSeconds, teamToColor, teamToPlayers } from '../utils';
+import { heroAvatar } from '../assets/assets';
 
 export const Detail = ({team, data, range, onRangeChange}) => {
   const mouseUp = useContext(MouseUpContext);
 
+  let ultCharts = [];
+  teamToPlayers(team).forEach((p) => {
+    ultCharts.push(
+      <UltChart key={p} data={data} player={p} range={range}/>
+    )
+  });
+
   return(
     <StatBox fill gap='medium'>
       <TeamHeader team={team}/>
-      <UltChart data={data} player={1} range={range}/>
+      {ultCharts}
     </StatBox>
   );
 }
 
 const UltChart = ({data, player, range}) => {
-  let time = data.time.data;
-  let timeBound = [time[range[0]],time[range[1]-1]];
+  const [ultGroups, setUltGroups] = useState([]);
+  const [heroGroups, setHeroGroups] = useState([]);
 
-  let ultGroups = toUltGroups(data, player, range);
+  let team = player>6?2:1;
+
+  useEffect(() => {
+    setUltGroups(toUltGroups(data, player, range));
+    setHeroGroups(toHeroGroups(data, player, range));
+  },[data, player, range]);
+
   let areaCharts = [];
   ultGroups.forEach((g, i) => {
     let length = g.values.length;
@@ -78,12 +92,39 @@ const UltChart = ({data, player, range}) => {
     }
   });
 
+  let heroPoints = [];
+  heroGroups.forEach((g, i) => {
+    heroPoints.push(
+      <Box
+        key={g.ratio} width='24px' height='24px' round
+        background={`url(${heroAvatar[g.hero]})`}
+        style={{
+          position:'absolute', left:`${g.ratio*100}%`, bottom:'0px',
+          transform: `translate(-50%,50%)`,
+        }}>
+      </Box>
+    );
+  });
+
+
   return (
-    <Box fill='horizontal' height='128px'>
+    <Box fill='horizontal' height='96px'>
       <Stack fill>
+        <Box fill>
+          <GridLine/><GridLine/><GridLine/><GridLine/><GridLine/>
+        </Box>
         <Box fill direction='row'>{areaCharts}</Box>
         <Box fill direction='row'>{lineCharts}</Box>
+        <Box fill border={{color:'line', size:'1px', side:'bottom', style:'solid'}}></Box>
+        <Box fill style={{position:'relative'}}>{heroPoints}</Box>
       </Stack>
+    </Box>
+  );
+}
+
+const GridLine = (props) => {
+  return (
+    <Box fill border={{color:'lineLight', size:'1px', side:'top', style:'dashed'}}>
     </Box>
   );
 }
@@ -118,5 +159,22 @@ const toUltGroups = (data, player, range) => {
     groups[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?u:0]});
   }
 
+  return groups;
+}
+
+const toHeroGroups = (data, player, range) => {
+  let r = range[1]-range[0]-1;
+  let hero = data['hero'][player];
+
+  let prevH = hero[range[0]];
+  let groups = [];
+  for (let i = range[0]; i < range[1]; i++) {
+    let h = hero[i];
+    if (h >= 0 && h !== prevH) {
+      // Only color when status > 0
+      prevH = h;
+      groups.push({ratio: (i-range[0])/r, hero: data['heroes'][prevH]});
+    }
+  }
   return groups;
 }

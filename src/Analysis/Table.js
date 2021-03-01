@@ -3,7 +3,7 @@ import { Box, Text, Stack } from 'grommet';
 import { StatBox } from './StatBox';
 import { TeamHeader } from './TeamHeader';
 import { heroAvatar } from '../assets/assets';
-import { teamToColor, teamToRowDirection } from '../utils';
+import { teamToColor, teamToRowDirection, teamToPlayers } from '../utils';
 
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
@@ -420,11 +420,6 @@ const ValueContainer = (props) => {
       {props.children}
     </Box>
   )
-}
-
-const teamToPlayers = (team) => {
-  if (team === 2) return [7,8,9,10,11,12];
-  return [1,2,3,4,5,6];
 }
 
 const calcTop = (clientY, topOffset, rect) => {
