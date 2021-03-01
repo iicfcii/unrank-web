@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, Stack } from 'grommet';
-import { Down, Up } from 'grommet-icons';
 import { StatBox } from './StatBox';
+import { TeamHeader } from '../components/TeamHeader';
 import { heroAvatar } from '../assets/assets';
 import { teamToColor, teamToRowDirection } from '../utils';
 
@@ -17,8 +17,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [hoverInfo, setHoverInfo] = useState(null);
   const containerRef = useRef(null);
 
-  let color = teamToColor(team);
-  let direction = team===1?'row':'row-reverse';
   let heroData = calcHero(data, range, team);
   let ultData = calcUlt(data, range, team);
   let deathData = calcDeath(data, range, team);
@@ -196,22 +194,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
 
   return(
     <StatBox id='table' fill='horizontal' pad='medium' justify='start'>
-      <Box
-        direction={direction} justify='between' align='center'
-        pad={{horizontal: 'small', vertical: 'xsmall'}}
-        background={{color:color, opacity:'0.1'}}>
-        <Box
-          justify='center' align='center'
-          width='36px' height='36px'
-          onClick={() => {if (onHide) onHide(!hide)}}>
-          {hide?(
-            <Down size='16px' color='text'/>
-          ):(
-            <Up size='16px' color='text'/>
-          )}
-        </Box>
-        <Text weight={700} color={teamToColor(team)}>{`队伍${team}`}</Text>
-      </Box>
+      <TeamHeader team={team} hide={hide} onHide={onHide}/>
       {!hide && (
         <Box>
           <TitleRow team={team}/>
