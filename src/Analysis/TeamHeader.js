@@ -3,7 +3,7 @@ import { Box, Text } from 'grommet';
 import { Down, Up } from 'grommet-icons';
 import { teamToColor, teamToRowDirection } from '../utils';
 
-export const TeamHeader = ({team, hide, onHide}) => {
+export const TeamHeader = ({team, hide, onHide, icon}) => {
   return (
     <Box
       direction={teamToRowDirection(team)} justify='between' align='center'
@@ -19,7 +19,10 @@ export const TeamHeader = ({team, hide, onHide}) => {
           <Up size='16px' color='text'/>
         )}
       </Box>
-      <Text weight={700} color={teamToColor(team)}>{`队伍${team}`}</Text>
+      <Box direction={teamToRowDirection(team)} align='center' gap='xsmall'>
+        <Text weight={700} color={teamToColor(team)}>{`队伍${team}`}</Text>
+        {team===1?(icon):(<Box style={{transform:'scale(-1,1)'}}>{icon}</Box>)}
+      </Box>
     </Box>
   );
 }

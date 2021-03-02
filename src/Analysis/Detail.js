@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
-import { FormClose, CaretDownFill } from 'grommet-icons';
+import { FormClose, CaretDownFill, LineChart } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
@@ -17,7 +17,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
 
   return(
     <StatBox fill gap='small'>
-      <TeamHeader team={team} hide={hide} onHide={onHide}/>
+      <TeamHeader
+        team={team} hide={hide} onHide={onHide}
+          icon={(<LineChart size='24px' color={teamToColor(team)}/>)}/>
       {!hide && (
         <Box gap='small'>
           <Box direction={teamToRowDirection(team)} justify='center' gap='large'>
@@ -125,6 +127,36 @@ const UltChart = ({data, player, range}) => {
     }
   });
 
+
+    let deathCharts = [];
+    deathGroups.forEach((g, i) => {
+      let length = g.values.length;
+      // Change the key based on states so that Chart will rerender
+      let key = range[0].toString()+range[1].toString();
+      if (!g.death) {
+        deathCharts.push(
+          <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+            <Chart
+              key={key}
+              size='fill' type='area' thickness='0px'
+              bounds={[[0,length],[0,100]]}
+              values={g.values}/>
+          </Box>
+        );
+      } else {
+        deathCharts.push(
+          <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+            <Chart
+              key={key}
+              size='fill' color='line'
+              type='area' thickness='0px'
+              bounds={[[0,length],[0,100]]}
+              values={g.values}/>
+          </Box>
+        );
+      }
+    });
+
   let heroPoints = [];
   heroGroups.forEach((g, i) => {
     heroPoints.push(
@@ -137,35 +169,6 @@ const UltChart = ({data, player, range}) => {
         }}>
       </Box>
     );
-  });
-
-  let deathCharts = [];
-  deathGroups.forEach((g, i) => {
-    let length = g.values.length;
-    // Change the key based on states so that Chart will rerender
-    let key = range[0].toString()+range[1].toString();
-    if (!g.death) {
-      deathCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
-          <Chart
-            key={key}
-            size='fill' type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
-            values={g.values}/>
-        </Box>
-      );
-    } else {
-      deathCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
-          <Chart
-            key={key}
-            size='fill' color='line'
-            type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
-            values={g.values}/>
-        </Box>
-      );
-    }
   });
 
   let elimPoints = [];

@@ -6,7 +6,7 @@ export const Footer = (props) => {
   return(
     <Box
       direction='row' background='white' justify='between'
-      height='60px' pad={{horizontal:'large'}}
+      height='64px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'top', style:'solid'}}>
       <Box justify='center'>
         <Text size='medium'>©2020 Unrank.gg</Text>

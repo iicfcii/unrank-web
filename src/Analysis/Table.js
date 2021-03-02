@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Text, Stack } from 'grommet';
+import { TextAlignLeft } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TeamHeader } from './TeamHeader';
 import { heroAvatar } from '../assets/assets';
 import { teamToColor, teamToRowDirection, teamToPlayers } from '../utils';
+
 
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
@@ -194,7 +196,9 @@ export const Table = ({data, team, range, hide, onHide}) => {
 
   return(
     <StatBox id='table' fill='horizontal' pad='medium' justify='start'>
-      <TeamHeader team={team} hide={hide} onHide={onHide}/>
+      <TeamHeader
+        team={team} hide={hide} onHide={onHide}
+        icon={(<TextAlignLeft size='24px' color={teamToColor(team)}/>)}/>
       {!hide && (
         <Box>
           <TitleRow team={team}/>

@@ -104,10 +104,8 @@ export const Objective = ({data, range, onRangeChange}) => {
         <Stack fill>
           <Box fill>
             <GridLine label='100'/>
-            <GridLine label='80'/>
-            <GridLine label='60'/>
-            <GridLine label='40'/>
-            <GridLine label='20'/>
+            <GridLine label='66'/>
+            <GridLine label='33'/>
           </Box>
           <Box fill direction='row'>
             {areaCharts}
@@ -122,7 +120,7 @@ export const Objective = ({data, range, onRangeChange}) => {
               border={{color:'text', size:'1px', side:'left', style:'dashed'}}>
             </Box>
           )}
-          {hoverPt && (
+          {false && ( // hoverPt
             <Box
               style={{marginTop: hoverPt[1]+'px'}}
               border={{color:'text', size:'1px', side:'top', style:'dashed'}}>
