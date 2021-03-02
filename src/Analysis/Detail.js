@@ -1,17 +1,14 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
 import { FormClose, CaretDownFill } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
-import { MouseUpContext, formatSeconds, teamToColor, teamToPlayers } from '../utils';
+import { teamToColor, teamToPlayers, teamToRowDirection } from '../utils';
 import { heroAvatar } from '../assets/assets';
 
-export const Detail = ({team, data, range, onRangeChange}) => {
-  const mouseUp = useContext(MouseUpContext);
-
+export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
   let ultCharts = [];
-  // teamToPlayers(team)
   teamToPlayers(team).forEach((p) => {
     ultCharts.push(
       <UltChart key={p} data={data} player={p} range={range}/>
@@ -20,24 +17,36 @@ export const Detail = ({team, data, range, onRangeChange}) => {
 
   return(
     <StatBox fill gap='small'>
-      <TeamHeader team={team}/>
-      <Box direction='row' justify='center' gap='large'>
-        <Box direction='row' align='center'>
-          <CaretDownFill size='24px' color='orange'/>
-          <Text size='small' color='text'>大招</Text>
+      <TeamHeader team={team} hide={hide} onHide={onHide}/>
+      {!hide && (
+        <Box gap='small'>
+          <Box direction={teamToRowDirection(team)} justify='center' gap='large'>
+            <Box direction='row' align='center'>
+              <CaretDownFill size='24px' color='orange'/>
+              <Text size='small' color='text'>大招</Text>
+            </Box>
+            <Box direction='row' align='center'>
+              <FormClose size='24px' color={teamToColor(team===1?2:1)}/>
+              <Text size='small' color='text'>击杀</Text>
+            </Box>
+            <Box direction='row' align='center'>
+              <Box background='line' width='12px' height='12px' margin='6px'></Box>
+              <Text size='small' color='text'>死亡</Text>
+            </Box>
+          </Box>
+          <Box gap='medium'>
+            {ultCharts}
+          </Box>
+          <TimeSelector
+            reverse={team===2}
+            range={[range[0],range[1]-1]}
+            max={data.time.data.length-1}
+            onChange={(values) => {
+              let rangeNew = [values[0],values[1]+1]
+              if(onRangeChange) onRangeChange(rangeNew);
+            }}/>
         </Box>
-        <Box direction='row' align='center'>
-          <FormClose size='24px' color={teamToColor(team===1?2:1)}/>
-          <Text size='small' color='text'>击杀</Text>
-        </Box>
-        <Box direction='row' align='center'>
-          <Box background='line' width='12px' height='12px' margin='6px'></Box>
-          <Text size='small' color='text'>死亡</Text>
-        </Box>
-      </Box>
-      <Box gap='medium'>
-        {ultCharts}
-      </Box>
+      )}
     </StatBox>
   );
 }
@@ -108,7 +117,7 @@ const UltChart = ({data, player, range}) => {
           <Chart
             key={key}
             size='fill' round color={g.color}
-            type='line' thickness='3px'
+            type='line' thickness='2px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
         </Box>
@@ -212,12 +221,38 @@ const GridLine = (props) => {
   );
 }
 
+const reverseData = (array, player) => {
+  if (player > 6) {
+    return array.slice().reverse();
+  } else {
+    return array;
+  }
+}
+
+const reverseRatio = (r, player) => {
+  if (player > 6) {
+    return 1-r;
+  } else {
+    return r;
+  }
+}
+
+const reverseRange = (r, player, data) => {
+  let l = data.time.data.length;
+  if (player > 6) {
+    return [l-r[1],l-r[0]];
+  } else {
+    return r;
+  }
+}
+
 const toUltGroups = (data, player, range) => {
+  range = reverseRange(range, player, data);
   let color = teamToColor(player>6?2:1);
 
-  let status = data.objective.status;
   let time = data.time.data;
-  let ult  = data.ult[player];
+  let status = reverseData(data.objective.status, player);
+  let ult  = reverseData(data.ult[player], player);
 
   let prevT = time[range[0]];
   let prevS = status[range[0]];
@@ -245,32 +280,14 @@ const toUltGroups = (data, player, range) => {
   return groups;
 }
 
-const toHeroGroups = (data, player, range) => {
-  let r = range[1]-range[0]-1;
-  let hero = data['hero'][player];
-
-  let prevH = hero[range[0]];
-  let groups = [];
-  if (prevH !== null) groups.push({ratio: 0, hero: data['heroes'][prevH]});
-  for (let i = range[0]; i < range[1]; i++) {
-    let h = hero[i];
-    if (h >= 0 && h !== prevH) {
-      // Only color when status > 0
-      prevH = h;
-      groups.push({ratio: (i-range[0])/r, hero: data['heroes'][prevH]});
-    }
-  }
-
-  return groups;
-}
-
 const toDeathGroups = (data, player, range) => {
+  range = reverseRange(range, player, data);
   let time = data.time.data;
-  let health = data['health'][player];
+  let health = reverseData(data['health'][player], player);
 
   let prevT = time[range[0]];
   let prevH = health[range[0]];
-  let groups = [{death: prevH===1, values: []}];
+  let groups = [{death: prevH===0, values: []}];
   let groupIndex = 0;
   for (let i = range[0]; i < range[1]; i++) {
     let t = time[i];
@@ -293,6 +310,31 @@ const toDeathGroups = (data, player, range) => {
   return groups;
 }
 
+const toHeroGroups = (data, player, range) => {
+  let r = range[1]-range[0]-1;
+  let hero = data['hero'][player];
+
+  let prevH = hero[range[0]];
+  let groups = [];
+  if (prevH !== null) groups.push({
+    ratio: reverseRatio(0, player),
+    hero: data['heroes'][prevH]
+  });
+  for (let i = range[0]; i < range[1]; i++) {
+    let h = hero[i];
+    if (h >= 0 && h !== prevH) {
+      // Only color when status > 0
+      prevH = h;
+      groups.push({
+        ratio: reverseRatio((i-range[0])/r, player),
+        hero: data['heroes'][prevH]
+      });
+    }
+  }
+
+  return groups;
+}
+
 const toElimGroups = (data, player, range) => {
   let enemyPlayers = teamToPlayers(player>6?1:2);
   let r = range[1]-range[0]-1;
@@ -308,7 +350,10 @@ const toElimGroups = (data, player, range) => {
     });
 
     if (numElim > 0)
-    groups.push({ratio: (i-range[0])/r, elim: numElim});
+    groups.push({
+      ratio: reverseRatio((i-range[0])/r, player),
+      elim: numElim
+    });
   }
 
   return groups;
@@ -321,7 +366,9 @@ const toUltUseGroups = (data, player, range) => {
   let groups = [];
   for (let i = range[0]; i < range[1]; i++) {
     if (ultUse[i] === 1) {
-      groups.push({ratio: (i-range[0])/r});
+      groups.push({
+        ratio: reverseRatio((i-range[0])/r, player)
+      });
     }
   }
 
