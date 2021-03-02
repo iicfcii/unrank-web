@@ -28,6 +28,7 @@ export const Analysis = (props) => {
       </Box>
       <Box direction='row' gap='medium' fill='horizontal'>
         <Detail team={1} data={data} range={range}/>
+        <Detail team={2} data={data} range={range}/>
       </Box>
     </Box>
   );

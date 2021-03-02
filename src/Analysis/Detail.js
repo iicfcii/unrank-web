@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
+import { FormClose, CaretDownFill } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
@@ -18,24 +19,44 @@ export const Detail = ({team, data, range, onRangeChange}) => {
   });
 
   return(
-    <StatBox fill gap='medium'>
+    <StatBox fill gap='small'>
       <TeamHeader team={team}/>
-      {ultCharts}
+      <Box direction='row' justify='center' gap='large'>
+        <Box direction='row' align='center'>
+          <CaretDownFill size='24px' color='orange'/>
+          <Text size='small' color='text'>大招</Text>
+        </Box>
+        <Box direction='row' align='center'>
+          <FormClose size='24px' color={teamToColor(team===1?2:1)}/>
+          <Text size='small' color='text'>击杀</Text>
+        </Box>
+        <Box direction='row' align='center'>
+          <Box background='line' width='12px' height='12px' margin='6px'></Box>
+          <Text size='small' color='text'>死亡</Text>
+        </Box>
+      </Box>
+      <Box gap='medium'>
+        {ultCharts}
+      </Box>
     </StatBox>
   );
 }
 
 const UltChart = ({data, player, range}) => {
   const [ultGroups, setUltGroups] = useState([]);
+  const [ultUseGroups, setUltUseGroups] = useState([]);
   const [heroGroups, setHeroGroups] = useState([]);
   const [deathGroups, setDeathGroups] = useState([]);
+  const [elimGroups, setElimGroups] = useState([]);
 
   let team = player>6?2:1;
 
   useEffect(() => {
     setUltGroups(toUltGroups(data, player, range));
+    setUltUseGroups(toUltUseGroups(data, player, range));
     setHeroGroups(toHeroGroups(data, player, range));
     setDeathGroups(toDeathGroups(data, player, range));
+    setElimGroups(toElimGroups(data, player, range));
   },[data, player, range]);
 
   let areaCharts = [];
@@ -129,7 +150,7 @@ const UltChart = ({data, player, range}) => {
         <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
-            size='fill' color={{color: 'line', opacity: '0.7'}}
+            size='fill' color='line'
             type='area' thickness='0px'
             bounds={[[0,length],[0,100]]}
             values={g.values}/>
@@ -138,17 +159,47 @@ const UltChart = ({data, player, range}) => {
     }
   });
 
+  let elimPoints = [];
+  elimGroups.forEach((g, i) => {
+    elimPoints.push(
+      <Box
+        key={g.ratio}
+        style={{
+          position:'absolute', left:`${g.ratio*100}%`, bottom:'0px',
+          transform: `translate(-50%,50%)`,
+        }}>
+        <FormClose size='24px' color={teamToColor(team===1?2:1)}/>
+      </Box>
+    );
+  });
+
+  let ultUseCharts = [];
+  ultUseGroups.forEach((g, i) => {
+    ultUseCharts.push(
+      <Box
+        key={g.ratio}
+        style={{
+          position:'absolute', left:`${g.ratio*100}%`, top:'0px',
+          transform: `translate(-50%,-50%)`,
+        }}>
+        <CaretDownFill size='24px' color='orange'/>
+      </Box>
+    );
+  });
+
   return (
     <Box fill='horizontal' height='96px'>
       <Stack fill>
         <Box fill>
           <GridLine/><GridLine/><GridLine/><GridLine/><GridLine/>
         </Box>
+        <Box fill direction='row'>{deathCharts}</Box>
         <Box fill direction='row'>{areaCharts}</Box>
         <Box fill direction='row'>{lineCharts}</Box>
-        <Box fill direction='row'>{deathCharts}</Box>
         <Box fill border={{color:'line', size:'1px', side:'bottom', style:'solid'}}></Box>
         <Box fill style={{position:'relative'}}>{heroPoints}</Box>
+        <Box fill style={{position:'relative'}}>{elimPoints}</Box>
+        <Box fill direction='row'>{ultUseCharts}</Box>
       </Stack>
     </Box>
   );
@@ -200,6 +251,7 @@ const toHeroGroups = (data, player, range) => {
 
   let prevH = hero[range[0]];
   let groups = [];
+  if (prevH !== null) groups.push({ratio: 0, hero: data['heroes'][prevH]});
   for (let i = range[0]; i < range[1]; i++) {
     let h = hero[i];
     if (h >= 0 && h !== prevH) {
@@ -208,11 +260,11 @@ const toHeroGroups = (data, player, range) => {
       groups.push({ratio: (i-range[0])/r, hero: data['heroes'][prevH]});
     }
   }
+
   return groups;
 }
 
 const toDeathGroups = (data, player, range) => {
-  let r = range[1]-range[0]-1;
   let time = data.time.data;
   let health = data['health'][player];
 
@@ -236,6 +288,41 @@ const toDeathGroups = (data, player, range) => {
       groupIndex ++;
     }
     groups[groupIndex].values.push({value: [t-prevT, prevH===0?100:0]});
+  }
+
+  return groups;
+}
+
+const toElimGroups = (data, player, range) => {
+  let enemyPlayers = teamToPlayers(player>6?1:2);
+  let r = range[1]-range[0]-1;
+  let elim = data['elim'];
+
+  let groups = [];
+  for (let i = range[0]; i < range[1]; i++) {
+    let numElim = 0;
+    enemyPlayers.forEach((ep) => {
+      if (elim[ep][i] === player) {
+        numElim ++;
+      }
+    });
+
+    if (numElim > 0)
+    groups.push({ratio: (i-range[0])/r, elim: numElim});
+  }
+
+  return groups;
+}
+
+const toUltUseGroups = (data, player, range) => {
+  let r = range[1]-range[0]-1;
+  let ultUse = data['ult_use'][player];
+
+  let groups = [];
+  for (let i = range[0]; i < range[1]; i++) {
+    if (ultUse[i] === 1) {
+      groups.push({ratio: (i-range[0])/r});
+    }
   }
 
   return groups;
