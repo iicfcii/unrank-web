@@ -62,7 +62,7 @@ const Item = (props) => {
         background={select?'orange':'white'} justify='center'
         pad={{horizontal:'medium'}}
         border={select?{color:'orangeLight', size:'medium', side:'bottom', style:'solid'}:null}>
-        <Text size='large' color={select?'white':'text'}>
+        <Text size='medium' color={select?'white':'text'}>
           {props.label}
         </Text>
       </Box>
