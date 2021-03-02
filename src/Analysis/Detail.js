@@ -10,6 +10,7 @@ export const Detail = ({team, data, range, onRangeChange}) => {
   const mouseUp = useContext(MouseUpContext);
 
   let ultCharts = [];
+  // teamToPlayers(team)
   teamToPlayers(team).forEach((p) => {
     ultCharts.push(
       <UltChart key={p} data={data} player={p} range={range}/>
@@ -27,12 +28,14 @@ export const Detail = ({team, data, range, onRangeChange}) => {
 const UltChart = ({data, player, range}) => {
   const [ultGroups, setUltGroups] = useState([]);
   const [heroGroups, setHeroGroups] = useState([]);
+  const [deathGroups, setDeathGroups] = useState([]);
 
   let team = player>6?2:1;
 
   useEffect(() => {
     setUltGroups(toUltGroups(data, player, range));
     setHeroGroups(toHeroGroups(data, player, range));
+    setDeathGroups(toDeathGroups(data, player, range));
   },[data, player, range]);
 
   let areaCharts = [];
@@ -106,6 +109,34 @@ const UltChart = ({data, player, range}) => {
     );
   });
 
+  let deathCharts = [];
+  deathGroups.forEach((g, i) => {
+    let length = g.values.length;
+    // Change the key based on states so that Chart will rerender
+    let key = range[0].toString()+range[1].toString();
+    if (!g.death) {
+      deathCharts.push(
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+          <Chart
+            key={key}
+            size='fill' type='area' thickness='0px'
+            bounds={[[0,length],[0,100]]}
+            values={g.values}/>
+        </Box>
+      );
+    } else {
+      deathCharts.push(
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+          <Chart
+            key={key}
+            size='fill' color={{color: 'line', opacity: '0.7'}}
+            type='area' thickness='0px'
+            bounds={[[0,length],[0,100]]}
+            values={g.values}/>
+        </Box>
+      );
+    }
+  });
 
   return (
     <Box fill='horizontal' height='96px'>
@@ -115,6 +146,7 @@ const UltChart = ({data, player, range}) => {
         </Box>
         <Box fill direction='row'>{areaCharts}</Box>
         <Box fill direction='row'>{lineCharts}</Box>
+        <Box fill direction='row'>{deathCharts}</Box>
         <Box fill border={{color:'line', size:'1px', side:'bottom', style:'solid'}}></Box>
         <Box fill style={{position:'relative'}}>{heroPoints}</Box>
       </Stack>
@@ -176,5 +208,35 @@ const toHeroGroups = (data, player, range) => {
       groups.push({ratio: (i-range[0])/r, hero: data['heroes'][prevH]});
     }
   }
+  return groups;
+}
+
+const toDeathGroups = (data, player, range) => {
+  let r = range[1]-range[0]-1;
+  let time = data.time.data;
+  let health = data['health'][player];
+
+  let prevT = time[range[0]];
+  let prevH = health[range[0]];
+  let groups = [{death: prevH===1, values: []}];
+  let groupIndex = 0;
+  for (let i = range[0]; i < range[1]; i++) {
+    let t = time[i];
+    let h = health[i];
+
+    if (
+      (h === 0 && prevH !== 0) ||
+      (h === 1 && prevH === 0) ||
+      (h === null && prevH === 0) // Between round counts as not dead
+    ) {
+      // Only color when status > 0
+      prevT = t;
+      prevH = h;
+      groups.push({death: prevH===0, values: []});
+      groupIndex ++;
+    }
+    groups[groupIndex].values.push({value: [t-prevT, prevH===0?100:0]});
+  }
+
   return groups;
 }
