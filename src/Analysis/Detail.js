@@ -30,7 +30,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     if (y < 0 || y > rect.height-1 || x < 0 || x > rect.width-1) return;
 
     let player = order[Math.floor(y/(CHART_HEIGHT+CHART_GAP))];
-    let i = Math.floor((x/rect.width)*(range[1]-range[0]))+range[0];
+    let i = team===1
+      ?Math.floor((x/rect.width)*(range[1]-range[0]))+range[0]
+      :Math.floor(((rect.width-x)/rect.width)*(range[1]-range[0]))+range[0];
     let status = data.objective.status[i];
     if (status !== -1 && status !== null) {
       let time = data.time.data[i];
@@ -53,7 +55,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
       }
 
       // Whether elim any hero
-      let elimHalfRange = Math.ceil(24/rect.width*(range[1]-range[0])/2);
+      let elimHalfRange = Math.ceil(12/rect.width*(range[1]-range[0])/2); // Range a litte bigger than icon actual size
       let k = 0;
       let matchElim = (p) => {
         if (data.elim[p][i+k] === player) elim = data.heroes[data.hero[p][i+k]];
@@ -213,7 +215,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
           <Stack interactiveChild='first'>
             <Box
               ref={containerRef}
-              style={{touchAction:'none'}}
+              style={{touchAction:'none',cursor:pressed?'grabbing':'auto'}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
               onMouseDown={() => setPressed(true)}
               onMouseOut={onOut}
@@ -242,26 +244,15 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               <Box
                 style={{
                   position: 'absolute',
-                  left:`${hoverInfo.left+8}px`,
+                  left:`${hoverInfo.left+(team===1?8:-8)}px`,
                   top:`${hoverInfo.top+8}px`,
-                  transform: `translate(0%, 0%)`,
+                  transform: `translate(${team===1?0:-100}%, 0%)`,
                   maxWidth: 'none', whiteSpace:'nowrap', zIndex: 1000,
                 }}
                 background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
-                <Box direction='row'>
-                  <Text size='small' color='white'>{`时间：`}</Text>
-                  <Text weight={900} size='small' color='white'>{formatSeconds(hoverInfo.time)}</Text>
-                </Box>
-                <Box direction='row'>
-                  <Text size='small' color='white'>{`进度：`}</Text>
-                  <Text weight={900} size='small' color='white'>{`${hoverInfo.progress}%`}</Text>
-                </Box>
-                {hoverInfo.elimBy && (
-                  <Box direction='row'>
-                    <Text size='small' color='white'>{`死亡：`}</Text>
-                    <Text weight={900} size='small' color='white'>{hoverInfo.elimBy}</Text>
-                  </Box>
-                )}
+                <Info label='`时间：' value={formatSeconds(hoverInfo.time)}/>
+                <Info label='`进度：' value={hoverInfo.progress}/>
+                {hoverInfo.elimBy && (<Info label='`死亡：' value={hoverInfo.elimBy}/>)}
                 {hoverInfo.elim && (<Info label='击杀：' value={hoverInfo.elim}/>)}
               </Box>
             )}

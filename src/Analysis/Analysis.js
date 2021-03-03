@@ -31,6 +31,9 @@ export const Analysis = (props) => {
         <Detail
           team={1} data={data} range={range} onRangeChange={setRange}
           hide={hideDetail} onHide={setHideDetail}/>
+          <Detail
+            team={2} data={data} range={range} onRangeChange={setRange}
+            hide={hideDetail} onHide={setHideDetail}/>
       </Box>
     </Box>
   );
