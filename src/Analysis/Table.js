@@ -6,7 +6,6 @@ import { TeamHeader } from './TeamHeader';
 import { heroAvatar } from '../assets/assets';
 import { teamToColor, teamToRowDirection, teamToPlayers } from '../utils';
 
-
 const ROW_HEIGHT = 56;
 const ROW_GAP = 12;
 

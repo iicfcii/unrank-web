@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
 import { FormClose, CaretDownFill, LineChart } from 'grommet-icons';
 import { StatBox } from './StatBox';
@@ -7,22 +7,114 @@ import { TeamHeader } from './TeamHeader';
 import { teamToColor, teamToPlayers, teamToRowDirection } from '../utils';
 import { heroAvatar } from '../assets/assets';
 
+const CHART_GAP = 24;
+const CHART_HEIGHT = 96;
+
 export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
+  const [select, setSelect] = useState(null); // Selected chart(0,1,2,3,4,5)
+  const [order, setOrder] = useState(teamToPlayers(team));
+  const [top, setTop] = useState(null);
+  const [topOffset, setTopOffset] = useState(null);
+  const containerRef = useRef(null);
+
+  const onStart = (event) => {
+    if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
+
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.touches?event.touches[0].clientY:event.clientY;
+    let selectNew = Math.floor((clientY-rect.top)/(CHART_HEIGHT+CHART_GAP));
+    let topOffset = (clientY-rect.top)-selectNew*(CHART_HEIGHT+CHART_GAP);
+    setSelect(selectNew);
+    setTop(selectNew*(CHART_HEIGHT+CHART_GAP));
+    setTopOffset(topOffset);
+  }
+
+  const onMove = useCallback((event) => {
+    const onDrag = () => {
+      let rect = containerRef.current.getBoundingClientRect();
+      let clientY = event.touches?event.touches[0].clientY:event.clientY;
+      let topNew = clientY-rect.top-topOffset;
+      if (topNew < 0) topNew = 0;
+      if (topNew > rect.height-CHART_HEIGHT-CHART_GAP)
+      topNew = rect.height-CHART_HEIGHT-CHART_GAP;
+      setTop(topNew);
+
+      let drop = Math.floor((clientY-rect.top)/(CHART_HEIGHT+CHART_GAP));
+      if (drop < 0) drop = 0;
+      if (drop > 5) drop = 5;
+      if (select !== drop) { // Reorder
+        let orderNew = [...order];
+        let p = orderNew.splice(select, 1)[0];
+        orderNew.splice(drop, 0, p);
+        setOrder(orderNew);
+        setSelect(orderNew.indexOf(p));
+      }
+    }
+    if (event.touches) {
+      if (select === null) {
+        onStart(event);
+      } else {
+        onDrag();
+      }
+    } else {
+      if (select === null) {
+      } else {
+        onDrag();
+      }
+    }
+  },[select, order, topOffset]);
+
+  const onRelease = useCallback((event) => {
+    if (select!==null) {
+      setSelect(null);
+      setTopOffset(null);
+    }
+  },[select]);
+
+  useEffect(() => {
+    document.addEventListener('mousemove', onMove);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+    }
+  },[onMove])
+
+  useEffect(() => {
+    document.addEventListener('mouseup', onRelease);
+    document.addEventListener('touchend', onRelease);
+    return () => {
+      document.removeEventListener('mouseup', onRelease);
+      document.removeEventListener('touchend', onRelease);
+    }
+  },[onRelease])
+
   let ultCharts = [];
-  teamToPlayers(team).forEach((p) => {
-    ultCharts.push(
-      <UltChart key={p} data={data} player={p} range={range}/>
-    )
+  order.forEach((p, i) => {
+    if (i === select) {
+      ultCharts.push(<UltChartEmpty key={p}/>)
+    } else {
+      ultCharts.push(
+        <UltChart key={p} data={data} player={p} range={range}/>
+      )
+    }
   });
 
+  let ultChartHover = null;
+  if (select!==null) {
+    ultChartHover = (
+      <UltChart data={data} player={order[select]} range={range}/>
+    );
+  }
+
   return(
-    <StatBox fill gap='small'>
+    <StatBox fill>
       <TeamHeader
         team={team} hide={hide} onHide={onHide}
           icon={(<LineChart size='24px' color={teamToColor(team)}/>)}/>
       {!hide && (
-        <Box gap='small'>
-          <Box direction={teamToRowDirection(team)} justify='center' gap='large'>
+        <Box>
+          <Box
+            direction={teamToRowDirection(team)} justify='center' gap='large'
+            margin={{top:'small'}}>
             <Box direction='row' align='center'>
               <CaretDownFill size='24px' color='orange'/>
               <Text size='small' color='text'>大招</Text>
@@ -36,9 +128,34 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               <Text size='small' color='text'>死亡</Text>
             </Box>
           </Box>
-          <Box gap='medium'>
-            {ultCharts}
-          </Box>
+          <Stack interactiveChild='first'>
+            <Box
+              ref={containerRef}
+              style={{touchAction:'none'}}
+              height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
+              onMouseDown={onStart}
+              onTouchMove={onMove}
+              onTouchEnd={(event) => {
+                if (event.cancelable) event.preventDefault();
+              }}>
+            </Box>
+            <Box fill>
+              {ultCharts}
+            </Box>
+            <Box fill style={{position: 'relative'}}>
+              {select!==null && (
+                <Box
+                  style={{
+                    position:'absolute', top:`${top}px`,
+                    left:'-8px', right:'-8px', maxWidth: 'none'
+                  }}
+                  pad={{horizontal:'6px'}} background='white' elevation='drag'
+                  border={{color:'orangeLight', size:'2px', side:'all', style:'solid'}}>
+                  {ultChartHover}
+                </Box>
+              )}
+            </Box>
+          </Stack>
           <TimeSelector
             reverse={team===2}
             range={[range[0],range[1]-1]}
@@ -50,6 +167,16 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
         </Box>
       )}
     </StatBox>
+  );
+}
+
+const UltChartEmpty = () => {
+  return (
+    <Box
+      fill='horizontal' height={`${CHART_HEIGHT}px`} background='backgroundLight'
+      margin={{vertical:`${CHART_GAP/2}px`}}
+      border={{color:'lineLight', size:'1px', side:'all', style:'solid'}}>
+    </Box>
   );
 }
 
@@ -200,7 +327,9 @@ const UltChart = ({data, player, range}) => {
   });
 
   return (
-    <Box fill='horizontal' height='96px'>
+    <Box
+      fill='horizontal' height={`${CHART_HEIGHT}px`}
+      margin={{vertical:`${CHART_GAP/2}px`}}>
       <Stack fill>
         <Box fill>
           <GridLine/><GridLine/><GridLine/><GridLine/><GridLine/>
