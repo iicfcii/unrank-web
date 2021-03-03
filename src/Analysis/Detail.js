@@ -143,11 +143,11 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
       setHoverInfo(null);
     }
 
-    if (pressed && !select) {
+    if (pressed && select === null) {
       onTap(event);
     }
 
-    if (select!==null) {
+    if (select !== null) {
       setSelect(null);
       setTopOffset(null);
     }
