@@ -126,7 +126,7 @@ export const Objective = ({data, range, onRangeChange}) => {
               border={{color:'text', size:'1px', side:'top', style:'dashed'}}>
             </Box>
           )}
-          {hoverPt && (
+          {false && (
             <Box
               style={{position: 'relative', left:`${hoverPt[0]-8}px`,top:`${hoverPt[1]-8}px`}}
               width='16px' height='16px' round background='white'

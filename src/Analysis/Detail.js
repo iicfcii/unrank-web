@@ -4,18 +4,86 @@ import { FormClose, CaretDownFill, LineChart } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
-import { teamToColor, teamToPlayers, teamToRowDirection } from '../utils';
+import { teamToColor, teamToPlayers, teamToRowDirection, formatSeconds } from '../utils';
 import { heroAvatar } from '../assets/assets';
 
 const CHART_GAP = 24;
 const CHART_HEIGHT = 96;
 
 export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
+  const [pressed, setPressed] = useState(false);
   const [select, setSelect] = useState(null); // Selected chart(0,1,2,3,4,5)
   const [order, setOrder] = useState(teamToPlayers(team));
   const [top, setTop] = useState(null);
   const [topOffset, setTopOffset] = useState(null);
+  const [hoverInfo, setHoverInfo] = useState(null);
   const containerRef = useRef(null);
+
+  const onTap = useCallback((event) => {
+    if (!containerRef.current) return;
+
+    let rect = containerRef.current.getBoundingClientRect();
+    let clientY = event.changedTouches?event.changedTouches[0].clientY:event.clientY;
+    let clientX = event.changedTouches?event.changedTouches[0].clientX:event.clientX;
+    let y = clientY-rect.top;
+    let x = clientX-rect.left;
+    if (y < 0 || y > rect.height-1 || x < 0 || x > rect.width-1) return;
+
+    let player = order[Math.floor(y/(CHART_HEIGHT+CHART_GAP))];
+    let i = Math.floor((x/rect.width)*(range[1]-range[0]))+range[0];
+    let status = data.objective.status[i];
+    if (status !== -1 && status !== null) {
+      let time = data.time.data[i];
+      let progress = data.objective.progress[i];
+      let elimBy;
+      let elim;
+
+      // Whether elim by any hero
+      let health = data.health[player][i];
+      if (health===0) {
+        let start = i-1;
+        let end = i+1;
+        while (data.health[player][start] === 0) start --;
+        start ++;
+        while (data.health[player][end] === 0) end ++;
+        for (let j = start; j < end; j ++) {
+          let p = data.elim[player][j];
+          if (p !== null) elimBy = data.heroes[data.hero[p][j]];
+        }
+      }
+
+      // Whether elim any hero
+      let elimHalfRange = Math.ceil(24/rect.width*(range[1]-range[0])/2);
+      let k = 0;
+      let matchElim = (p) => {
+        if (data.elim[p][i+k] === player) elim = data.heroes[data.hero[p][i+k]];
+        if (data.elim[p][i-k] === player) elim = data.heroes[data.hero[p][i-k]];
+      }
+      while (
+        k < elimHalfRange &&
+        i-k >= 0 &&
+        i+k < data.time.data.length &&
+        !elim
+      ) {
+          teamToPlayers(team===1?2:1).forEach(matchElim);
+          k ++;
+      }
+      setHoverInfo({
+        left: x,
+        top: y,
+        time: time,
+        progress: progress,
+        elimBy: elimBy,
+        elim: elim
+      });
+    } else {
+      setHoverInfo(null);
+    }
+  },[range, data, order, team]);
+
+  const onOut = (event) => {
+    if (hoverInfo) setHoverInfo(null);
+  }
 
   const onStart = (event) => {
     if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
@@ -27,10 +95,11 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     setSelect(selectNew);
     setTop(selectNew*(CHART_HEIGHT+CHART_GAP));
     setTopOffset(topOffset);
-  }
+    setHoverInfo(null);
+  };
 
   const onMove = useCallback((event) => {
-    const onDrag = () => {
+    const onDrag = (event) => {
       let rect = containerRef.current.getBoundingClientRect();
       let clientY = event.touches?event.touches[0].clientY:event.clientY;
       let topNew = clientY-rect.top-topOffset;
@@ -50,33 +119,46 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
         setSelect(orderNew.indexOf(p));
       }
     }
+
     if (event.touches) {
       if (select === null) {
         onStart(event);
       } else {
-        onDrag();
+        onDrag(event);
       }
     } else {
+      if (!pressed) return;
       if (select === null) {
+        onStart(event);
       } else {
-        onDrag();
+        onDrag(event);
       }
     }
-  },[select, order, topOffset]);
+  },[select, pressed, order, topOffset]);
 
   const onRelease = useCallback((event) => {
+    if (!pressed) {
+      setHoverInfo(null);
+    }
+
+    if (pressed && !select) {
+      onTap(event);
+    }
+
     if (select!==null) {
       setSelect(null);
       setTopOffset(null);
     }
-  },[select]);
+
+    setPressed(false);
+  },[select, pressed, onTap]);
 
   useEffect(() => {
     document.addEventListener('mousemove', onMove);
     return () => {
       document.removeEventListener('mousemove', onMove);
     }
-  },[onMove])
+  },[onMove, pressed])
 
   useEffect(() => {
     document.addEventListener('mouseup', onRelease);
@@ -133,7 +215,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               ref={containerRef}
               style={{touchAction:'none'}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
-              onMouseDown={onStart}
+              onMouseDown={() => setPressed(true)}
+              onMouseOut={onOut}
+              onTouchStart={() => setPressed(true)}
               onTouchMove={onMove}
               onTouchEnd={(event) => {
                 if (event.cancelable) event.preventDefault();
@@ -142,6 +226,45 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
             <Box fill>
               {ultCharts}
             </Box>
+            {hoverInfo && (
+              <Box
+                fill='vertical' style={{marginLeft:`${hoverInfo.left}px`}}
+                border={{color:'text', size:'1px', side:'left', style:'dashed'}}>
+              </Box>
+            )}
+            {hoverInfo && ( // hoverPt
+              <Box
+                style={{marginTop: `${hoverInfo.top}px`}}
+                border={{color:'text', size:'1px', side:'top', style:'dashed'}}>
+              </Box>
+            )}
+            {hoverInfo && (
+              <Box
+                style={{
+                  position: 'absolute',
+                  left:`${hoverInfo.left+8}px`,
+                  top:`${hoverInfo.top+8}px`,
+                  transform: `translate(0%, 0%)`,
+                  maxWidth: 'none', whiteSpace:'nowrap', zIndex: 1000,
+                }}
+                background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
+                <Box direction='row'>
+                  <Text size='small' color='white'>{`时间：`}</Text>
+                  <Text weight={900} size='small' color='white'>{formatSeconds(hoverInfo.time)}</Text>
+                </Box>
+                <Box direction='row'>
+                  <Text size='small' color='white'>{`进度：`}</Text>
+                  <Text weight={900} size='small' color='white'>{`${hoverInfo.progress}%`}</Text>
+                </Box>
+                {hoverInfo.elimBy && (
+                  <Box direction='row'>
+                    <Text size='small' color='white'>{`死亡：`}</Text>
+                    <Text weight={900} size='small' color='white'>{hoverInfo.elimBy}</Text>
+                  </Box>
+                )}
+                {hoverInfo.elim && (<Info label='击杀：' value={hoverInfo.elim}/>)}
+              </Box>
+            )}
             <Box fill style={{position: 'relative'}}>
               {select!==null && (
                 <Box
@@ -168,6 +291,15 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
       )}
     </StatBox>
   );
+}
+
+const Info = ({label, value}) => {
+  return (
+    <Box direction='row'>
+      <Text size='small' color='white'>{label}</Text>
+      <Text weight={900} size='small' color='white'>{value}</Text>
+    </Box>
+  )
 }
 
 const UltChartEmpty = () => {
