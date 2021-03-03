@@ -88,8 +88,6 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
   }
 
   const onStart = (event) => {
-    if (!event.touches) event.preventDefault(); // Prevent chrome from dragging text
-
     let rect = containerRef.current.getBoundingClientRect();
     let clientY = event.touches?event.touches[0].clientY:event.clientY;
     let selectNew = Math.floor((clientY-rect.top)/(CHART_HEIGHT+CHART_GAP));
@@ -217,7 +215,11 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               ref={containerRef}
               style={{touchAction:'none',cursor:pressed?'grabbing':'auto'}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
-              onMouseDown={() => setPressed(true)}
+              onMouseDown={(event) => {
+                // Prevent text drag and selection
+                if (!event.touches) event.preventDefault();
+                setPressed(true);
+              }}
               onMouseOut={onOut}
               onTouchStart={() => setPressed(true)}
               onTouchMove={onMove}
