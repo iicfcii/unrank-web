@@ -250,9 +250,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                   maxWidth: 'none', whiteSpace:'nowrap', zIndex: 1000,
                 }}
                 background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
-                <Info label='`时间：' value={formatSeconds(hoverInfo.time)}/>
-                <Info label='`进度：' value={hoverInfo.progress}/>
-                {hoverInfo.elimBy && (<Info label='`死亡：' value={hoverInfo.elimBy}/>)}
+                <Info label='时间：' value={formatSeconds(hoverInfo.time)}/>
+                <Info label='进度：' value={`${hoverInfo.progress}%`}/>
+                {hoverInfo.elimBy && (<Info label='死亡：' value={hoverInfo.elimBy}/>)}
                 {hoverInfo.elim && (<Info label='击杀：' value={hoverInfo.elim}/>)}
               </Box>
             )}
