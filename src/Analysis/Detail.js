@@ -563,7 +563,7 @@ const toDeathGroups = (data, player, range) => {
     let s = status[i];
     let h = health[i];
 
-    if (s === -1 && prevS > 0) {
+    if ((s === -1 || s === null) && prevS > 0) {
       prevT = t;
       groups.push({death: false, values: []});
       groupIndex ++;
