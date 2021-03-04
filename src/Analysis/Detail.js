@@ -4,6 +4,7 @@ import { FormClose, CaretDownFill, LineChart } from 'grommet-icons';
 import { StatBox } from './StatBox';
 import { TimeSelector} from './TimeSelector';
 import { TeamHeader } from './TeamHeader';
+import { toProgress } from './ObjectiveChart';
 import { teamToColor, teamToPlayers, teamToRowDirection, formatSeconds } from '../utils';
 import { heroAvatar } from '../assets/assets';
 
@@ -36,7 +37,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     let status = data.objective.status[i];
     if (status !== -1 && status !== null) {
       let time = data.time.data[i];
-      let progress = data.objective.progress[i];
+      let progress = toProgress(i, data.objective.progress, data.objective.type);
       let elimBy;
       let elim;
 
@@ -56,6 +57,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
 
       // Whether elim any hero
       let elimHalfRange = Math.ceil(12/rect.width*(range[1]-range[0])/2); // Range a litte bigger than icon actual size
+      if (elimHalfRange < 2) elimHalfRange = 2;
       let k = 0;
       let matchElim = (p) => {
         if (data.elim[p][i+k] === player) elim = data.heroes[data.hero[p][i+k]];
@@ -198,8 +200,16 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
             direction={teamToRowDirection(team)} justify='center' gap='large'
             margin={{top:'small'}}>
             <Box direction='row' align='center'>
+              <Box
+                border={{color:teamToColor(team),side:'top',width:'2px'}}
+                background={{color:teamToColor(team),opacity:'0.2'}}
+                width='12px' height='12px' margin='6px'>
+              </Box>
+              <Text size='small' color='text'>大招能量</Text>
+            </Box>
+            <Box direction='row' align='center'>
               <CaretDownFill size='24px' color='orange'/>
-              <Text size='small' color='text'>大招</Text>
+              <Text size='small' color='text'>大招释放</Text>
             </Box>
             <Box direction='row' align='center'>
               <FormClose size='24px' color={teamToColor(team===1?2:1)}/>

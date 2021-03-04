@@ -232,7 +232,7 @@ const toHoverInfo = (event, data, range) => {
         left: x,
         top: Math.round((100-p)/100*(rect.height-2)), // Consider line width
         time: t,
-        progress: Math.round(p),
+        progress: p,
         status: s,
         i: i
       }
@@ -286,7 +286,7 @@ const toDataGroups = (data, range) => {
   }
 }
 
-const toProgress = (i, progress, type) => {
+export const toProgress = (i, progress, type) => {
   let p
   if (type !== 'control') {
     if (type==='hybrid') {
@@ -299,5 +299,5 @@ const toProgress = (i, progress, type) => {
 
   }
 
-  return p;
+  return Math.round(p);
 }
