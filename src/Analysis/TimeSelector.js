@@ -5,7 +5,8 @@ import { formatSeconds } from '../utils';
 const THUMB_WIDTH = 12;
 
 // This range includes end while others don't
-export const TimeSelector = ({range, max, onChange}) => {
+export const TimeSelector = ({range, max, onChange, reverse}) => {
+  range = reverseRange(range,max,reverse)
   const containerRef = useRef(null);
   const [ltLeft, setLTLeft] = useState(null);
   const [rtLeft, setRTLeft] = useState(null);
@@ -51,7 +52,7 @@ export const TimeSelector = ({range, max, onChange}) => {
       let thumbsLeft = onRange(rangeNew, max, rect.width);
       setLTViewLeft(thumbsLeft[0]);
       setRTViewLeft(thumbsLeft[1]);
-      if (onChange) onChange(rangeNew);
+      if (onChange) onChange(reverseRange(rangeNew,max,reverse));
     }
 
     if (pressed === 'bar') {
@@ -61,8 +62,7 @@ export const TimeSelector = ({range, max, onChange}) => {
     }
 
     setPressed(null);
-
-  },[select, ltLeft, rtLeft, max, onChange, barOffset, pressed, range])
+  },[select, ltLeft, rtLeft, max, onChange, reverse, barOffset, pressed, range])
 
   const toRange = (left, select, width, ltLeft, rtLeft, max, offset) => {
     let leftValue; let rightValue;
@@ -114,10 +114,11 @@ export const TimeSelector = ({range, max, onChange}) => {
       let rDist = Math.abs((clientX-rect.left)-(rtLeft+THUMB_WIDTH));
       selected = lDist < rDist?'left':'right';
       left = clientX-rect.left;
+      left = selected==='left'?left:left-THUMB_WIDTH;
       setPressed(null);
     }
 
-    if (selected) {
+    if (selected && left) {
       let rangeNew = toRange(left, selected, rect.width, ltLeft, rtLeft, max, barOffset);
       let thumbsLeft = onRange(rangeNew, max, rect.width);
       setLTLeft(thumbsLeft[0]);
@@ -126,9 +127,13 @@ export const TimeSelector = ({range, max, onChange}) => {
       setRTViewLeft(thumbsLeft[1]);
       setSelect(null);
       setBarOffset(null);
-      if (onChange) onChange(rangeNew);
+      setMouseLeft(null);
+      if (onChange) onChange(reverseRange(rangeNew,max,reverse));
+    } else {
+      setSelect(null);
+      setMouseLeft(null);
     }
-  },[select, rtLeft, ltLeft, onChange, max, mouseLeft, pressed, barOffset]);
+  },[select, rtLeft, ltLeft, onChange, max, reverse, mouseLeft, pressed, barOffset]);
 
   // Handle resize and first time
   useEffect(() => {
@@ -157,11 +162,11 @@ export const TimeSelector = ({range, max, onChange}) => {
 
   // Handle release
   useEffect(() => {
-    document.addEventListener('mouseup', onRelease);
-    document.addEventListener('touchend', onRelease);
+    window.addEventListener('mouseup', onRelease);
+    window.addEventListener('touchend', onRelease);
     return () => {
-      document.removeEventListener('mouseup', onRelease);
-      document.removeEventListener('touchend', onRelease);
+      window.removeEventListener('mouseup', onRelease);
+      window.removeEventListener('touchend', onRelease);
     }
   },[onRelease])
 
@@ -203,9 +208,9 @@ export const TimeSelector = ({range, max, onChange}) => {
           </Box>
         </Stack>
       </Box>
-      <Box direction='row' justify='between' flex={false}>
-        <Text size='small'>{formatSeconds(range[0])}</Text>
-        <Text size='small'>{formatSeconds(range[1])}</Text>
+      <Box direction={reverse?'row-reverse':'row'} justify='between' flex={false}>
+        <Text size='small'>{formatSeconds(reverseRange(range,max,reverse)[0])}</Text>
+        <Text size='small'>{formatSeconds(reverseRange(range,max,reverse)[1])}</Text>
       </Box>
     </Box>
   );
@@ -240,4 +245,12 @@ const Thumb = ({id, left, hidden}) => {
       width={`${THUMB_WIDTH}px`} height='16px' round='xxxsmall'>
     </Box>
   );
+}
+
+const reverseRange = (r, max, reverse) => {
+  if (reverse) {
+    return [max-r[1],max-r[0]];
+  } else {
+    return r;
+  }
 }

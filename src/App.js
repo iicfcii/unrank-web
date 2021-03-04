@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { Grommet } from 'grommet';
 import { theme } from './theme';
 
-import { Header } from './components/Header';
-import { Footer } from './components/Footer';
+import { Header } from './Header';
+import { Footer } from './Footer';
 import { Home } from './Home/Home';
 import { Analysis } from './Analysis/Analysis';
 import { About } from './About/About';

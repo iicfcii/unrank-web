@@ -9,6 +9,11 @@ export const teamToRowDirection = (team) => {
   return team===1?'row':'row-reverse';
 }
 
+export const teamToPlayers = (team) => {
+  if (team === 2) return [7,8,9,10,11,12];
+  return [1,2,3,4,5,6];
+}
+
 export const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60

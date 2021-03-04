@@ -104,10 +104,8 @@ export const Objective = ({data, range, onRangeChange}) => {
         <Stack fill>
           <Box fill>
             <GridLine label='100'/>
-            <GridLine label='80'/>
-            <GridLine label='60'/>
-            <GridLine label='40'/>
-            <GridLine label='20'/>
+            <GridLine label='66'/>
+            <GridLine label='33'/>
           </Box>
           <Box fill direction='row'>
             {areaCharts}
@@ -223,7 +221,7 @@ const GridLineBottom = (props) => {
   return (
     <Box
       style={{position:'relative'}}
-      fill border={{color:'text', size:'1px', side:'bottom', style:'solid'}}>
+      fill border={{color:'line', size:'1px', side:'bottom', style:'solid'}}>
       <Box
         style={{
           position:'absolute', left:'-12px', bottom: '0px',
@@ -244,13 +242,16 @@ const chartColor = (s) => {
 const toDataGroups = (data, totalRange) => {
   let status = data.objective.status;
   let progress = data.objective.progress;
+  let time  = data.time.data;
 
-  let prevT = totalRange[0];
-  let prevS = status[prevT];
+  let prevT = time[totalRange[0]];
+  let prevS = status[totalRange[0]];
   let dataGroupsNew = [{color: chartColor(prevS), values: []}];
   let groupIndex = 0;
-  for (let t = totalRange[0]; t < totalRange[1]; t++) {
-    let s = status[t];
+  for (let i = totalRange[0]; i < totalRange[1]; i++) {
+    let s = status[i];
+    let t = time[i];
+    let p = progress[i];
     if (
       (s > 0 && prevS <= 0) ||
       (s < 0 && prevS >= 0 && prevS !== null) ||
@@ -262,7 +263,7 @@ const toDataGroups = (data, totalRange) => {
       dataGroupsNew.push({color: chartColor(s), values: []});
       groupIndex ++;
     }
-    dataGroupsNew[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?progress[t]:0]});
+    dataGroupsNew[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?p:0]});
   }
 
   return dataGroupsNew;
