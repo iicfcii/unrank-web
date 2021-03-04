@@ -537,11 +537,11 @@ const toUltGroups = (data, player, range) => {
     ) {
       // Only color when status > 0
       prevT = t;
-      prevS = s;
-      groups.push({color: prevS>0?color:'none', values: []});
+      groups.push({color: s>0?color:'none', values: []});
       groupIndex ++;
     }
     groups[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?u:0]});
+    prevS = s;
   }
 
   return groups;
@@ -550,28 +550,38 @@ const toUltGroups = (data, player, range) => {
 const toDeathGroups = (data, player, range) => {
   range = reverseRange(range, player, data);
   let time = data.time.data;
+  let status = data.objective.status;
   let health = reverseData(data['health'][player], player);
 
   let prevT = time[range[0]];
+  let prevS = status[range[0]];
   let prevH = health[range[0]];
   let groups = [{death: prevH===0, values: []}];
   let groupIndex = 0;
   for (let i = range[0]; i < range[1]; i++) {
     let t = time[i];
+    let s = status[i];
     let h = health[i];
 
-    if (
-      (h === 0 && prevH !== 0) ||
-      (h === 1 && prevH === 0) ||
-      (h === null && prevH === 0) // Between round counts as not dead
-    ) {
-      // Only color when status > 0
+    if (s === -1 && prevS > 0) {
       prevT = t;
-      prevH = h;
-      groups.push({death: prevH===0, values: []});
+      groups.push({death: false, values: []});
       groupIndex ++;
+    } else {
+      if (
+        (h === 0 && prevH !== 0) ||
+        (h === 1 && prevH === 0)
+        // (h === null && prevH === 0 && s > 0) // Between round counts as not dead
+      ) {
+        // Only color when status > 0
+        prevT = t;
+        groups.push({death: h===0, values: []});
+        groupIndex ++;
+      }
     }
-    groups[groupIndex].values.push({value: [t-prevT, prevH===0?100:0]});
+    groups[groupIndex].values.push({value: [t-prevT, h===0&&s>0?100:0]});
+    prevS = s
+    prevH = h;
   }
 
   return groups;
