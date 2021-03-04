@@ -189,10 +189,10 @@ const HybridLabel = () => {
   return (
     <Box fill style={{position:'relative'}}>
       <Box fill justify='center'>
-        <Icon icon={(<AssaultIcon style={{fill: '#8B8C8E'}}/>)}/>
+        <Icon icon={(<EscortIcon style={{fill: '#8B8C8E'}}/>)}/>
       </Box>
       <Box fill justify='center'>
-        <Icon icon={(<EscortIcon style={{fill: '#8B8C8E'}}/>)}/>
+        <Icon icon={(<AssaultIcon style={{fill: '#8B8C8E'}}/>)}/>
       </Box>
     </Box>
   );
