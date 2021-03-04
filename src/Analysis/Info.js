@@ -6,7 +6,7 @@ import { capitalize, formatSeconds } from '../utils';
 export const Info = ({data}) => {
   return(
     <StatBox gap='large' flex={false}>
-      <TextBox label='回放代码' value='NA'/>
+      <TextBox label='回放代码' value='DEMO'/>
       <TextBox label='总时长' value={formatSeconds(data.time.data.length-1)}/>
       <TextBox label='地图' value={`${capitalize(data.map)}`}/>
     </StatBox>
