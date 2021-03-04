@@ -1,14 +1,14 @@
 import React from 'react';
 import { Box, Text } from 'grommet';
 import { StatBox } from './StatBox';
-import { formatSeconds } from '../utils';
+import { capitalize, formatSeconds } from '../utils';
 
 export const Info = ({data}) => {
   return(
     <StatBox gap='large' flex={false}>
-      <TextBox label='回放代码' value='DEMO'/>
+      <TextBox label='回放代码' value='NA'/>
       <TextBox label='总时长' value={formatSeconds(data.time.data.length-1)}/>
-      <TextBox label='地图' value={`${data.map}(${data.objective.type})`}/>
+      <TextBox label='地图' value={`${capitalize(data.map)}`}/>
     </StatBox>
   );
 }
