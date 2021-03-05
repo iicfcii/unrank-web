@@ -27,7 +27,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
           <Chart
             key={key}
             size='fill' type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -38,7 +38,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
             key={key}
             size='fill' color={{color: g.color, opacity: '0.2'}}
             type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -55,7 +55,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
           <Chart
             key={key}
             size='fill' type='line' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -66,7 +66,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
             key={key}
             size='fill' round color={g.color}
             type='line' thickness='3px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -126,7 +126,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
             left:`${hoverInfo.left+(hoverInfo.i>(totalRange[1]-totalRange[0])/2?-8:8)}px`,
             top:`${hoverInfo.top+(hoverInfo.progress<50?-8:8)}px`,
             transform: `translate(
-              ${hoverInfo.i>(totalRange[1]-totalRange[0])?'-100%':'0%'},
+              ${hoverInfo.i>(totalRange[1]-totalRange[0])/2?'-100%':'0%'},
               ${hoverInfo.progress<50?'-100%':'0%'}
             )`,
             maxWidth: 'none', whiteSpace:'nowrap'
@@ -230,52 +230,52 @@ const Icon = ({icon}) => {
 
 const toHoverInfo = (event, data, range) => {
   let type = data.objective.type;
+  let rect = event.target.getBoundingClientRect();
+  let x = event.clientX - rect.left;
+
+  let i = Math.round(x/rect.width*(range[1]-range[0]))+range[0];
+  let status = data.objective.status;
+  let s = status[i];
+  let t = data.time.data[i];
+  let p = null;
 
   if (type !== 'control') {
-    let rect = event.target.getBoundingClientRect();
-    let x = event.clientX - rect.left;
-
-    let i = Math.round(x/rect.width*(range[1]-range[0]))+range[0];
-    let status = data.objective.status;
-    let s = status[i];
-
-    let hoverInfo;
-    if (s > 0) {
-      let t = data.time.data[i];
-      let p = toProgress(i, data.objective.progress, data.objective.type);
-      hoverInfo = {
-        left: x,
-        top: Math.round((100-p)/100*(rect.height-2)), // Consider line width
-        time: t,
-        progress: p,
-        status: s,
-        i: i
-      }
-    }
-    return hoverInfo;
+    if (s > 0) p = toProgress(i, data.objective.progress, data.objective.type);
   } else {
-
+    if (s === 1 || s === 2) p = data.objective.progress[s][i];
   }
+
+  if (p === null) return null;
+
+  let hoverInfo = {
+    left: x,
+    top: Math.round((100-p)/100*(rect.height-2)), // Consider line width
+    time: t,
+    progress: p,
+    status: s,
+    i: i
+  }
+  return hoverInfo;
 }
 
 const chartColor = (s) => {
   if (s === 2) return 'red';
   if (s === 1) return 'blue';
+  if (s === 0) return 'line';
   return 'none';
 }
 
 const toDataGroups = (data, range) => {
   let type = data.objective.type;
+  let status = data.objective.status;
+  let progress = data.objective.progress;
+  let time  = data.time.data;
+  let prevT = time[range[0]];
+  let prevS = status[range[0]];
+  let dataGroups = [{color: chartColor(prevS), values: []}];
+  let groupIndex = 0;
 
   if (type !== 'control') {
-    let status = data.objective.status;
-    let progress = data.objective.progress;
-    let time  = data.time.data;
-
-    let prevT = time[range[0]];
-    let prevS = status[range[0]];
-    let dataGroups = [{color: chartColor(prevS), values: []}];
-    let groupIndex = 0;
     for (let i = range[0]; i < range[1]; i++) {
       let s = status[i];
       let t = time[i];
@@ -297,25 +297,40 @@ const toDataGroups = (data, range) => {
 
     return dataGroups;
   } else {
-    return [];
+    for (let i = range[0]; i < range[1]; i++) {
+      let s = status[i];
+      let t = time[i];
+      if (
+        (s >= 0 && prevS < 0 && s !== null) ||
+        (s >= 0 && prevS >= 0 && s !== prevS && s !== null) ||
+        ((s === null || s < 0) && prevS > 0)
+      ) {
+        // Only color when status > 0
+        prevT = t;
+        dataGroups.push({color: s<0||s===null?'none':chartColor(s), values: []});
+        groupIndex ++;
+      }
+      let p;
+      if (s === 1 || s === 2) p = progress[s][i];
+      dataGroups[groupIndex].values.push({value: [t-prevT, p?p:0]});
+      prevS = s;
+    }
+    return dataGroups;
   }
 }
 
 export const toProgress = (i, progress, type) => {
-  let p
-  if (type !== 'control') {
-    if (type==='hybrid') {
-      p = progress.point[i]/3;
-      if (p === 100/3) p = progress.payload[i]/3*2+p;
-    } else if (type === 'assault'){
-      p = progress['A'][i]/2;
-      if (p === 100/2) p = progress['B'][i]/2+p;
-      console.log('p')
-    } else {
-      p = progress[i];
-    }
-  } else {
+  if (type === 'control') return;
 
+  let p
+  if (type==='hybrid') {
+    p = progress.point[i]/3;
+    if (p === 100/3) p = progress.payload[i]/3*2+p;
+  } else if (type === 'assault'){
+    p = progress['A'][i]/2;
+    if (p === 100/2) p = progress['B'][i]/2+p;
+  } else {
+    p = progress[i];
   }
 
   return Math.round(p);

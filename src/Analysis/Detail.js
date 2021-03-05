@@ -37,9 +37,20 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     let status = data.objective.status[i];
     if (status !== -1 && status !== null) {
       let time = data.time.data[i];
-      let progress = toProgress(i, data.objective.progress, data.objective.type);
+      let type = data.objective.type;
+      let progress = data.objective.progress;
+
+      let p;
       let elimBy;
       let elim;
+
+      // Progress
+      if (type !== 'control') {
+        p = toProgress(i, progress, type);
+      } else {
+        p = 0;
+        if (status === 1 || status === 2) p = progress[status][i];
+      }
 
       // Whether elim by any hero
       let health = data.health[player][i];
@@ -76,9 +87,10 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
         left: x,
         top: y,
         time: time,
-        progress: progress,
+        progress: p,
         elimBy: elimBy,
-        elim: elim
+        elim: elim,
+        status: status,
       });
     } else {
       setHoverInfo(null);
@@ -263,7 +275,14 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                 }}
                 background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
                 <Info label='时间：' value={formatSeconds(hoverInfo.time)}/>
-                <Info label='进度：' value={`${hoverInfo.progress}%`}/>
+                <Info label='进度：' value={`
+                  ${
+                    data.objective.type==='control'&&hoverInfo.status!==0
+                      ?`队伍${hoverInfo.status}，`
+                      :''
+                  }
+                  ${hoverInfo.progress}%
+                `}/>
                 {hoverInfo.elimBy && (<Info label='死亡：' value={hoverInfo.elimBy}/>)}
                 {hoverInfo.elim && (<Info label='击杀：' value={hoverInfo.elim}/>)}
               </Box>
@@ -343,18 +362,23 @@ const UltChart = ({data, player, range}) => {
           <Chart
             key={key}
             size='fill' type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
     } else {
       areaCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box
+          key={i} fill='vertical'
+          style={{
+            width:length/(range[1]-range[0])*100+'%',
+            transform: team===2?`scale(-1,1)`:'none'
+          }}>
           <Chart
             key={key}
             size='fill' color={{color: g.color, opacity: '0.2'}}
             type='area' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -367,22 +391,28 @@ const UltChart = ({data, player, range}) => {
     let key = range[0].toString()+range[1].toString();
     if (g.color === 'none') {
       lineCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box
+          key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
           <Chart
             key={key}
             size='fill' type='line' thickness='0px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
     } else {
       lineCharts.push(
-        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+        <Box
+          key={i} fill='vertical'
+          style={{
+            width:length/(range[1]-range[0])*100+'%',
+            transform: team===2?`scale(-1,1)`:'none'
+          }}>
           <Chart
             key={key}
             size='fill' round color={g.color}
             type='line' thickness='2px'
-            bounds={[[0,length],[0,100]]}
+            bounds={[[0,length-1],[0,100]]}
             values={g.values}/>
         </Box>
       );
@@ -488,14 +518,6 @@ const GridLine = (props) => {
   );
 }
 
-const reverseData = (array, player) => {
-  if (player > 6) {
-    return array.slice().reverse();
-  } else {
-    return array;
-  }
-}
-
 const reverseRatio = (r, player) => {
   if (player > 6) {
     return 1-r;
@@ -504,22 +526,12 @@ const reverseRatio = (r, player) => {
   }
 }
 
-const reverseRange = (r, player, data) => {
-  let l = data.time.data.length;
-  if (player > 6) {
-    return [l-r[1],l-r[0]];
-  } else {
-    return r;
-  }
-}
-
 const toUltGroups = (data, player, range) => {
-  range = reverseRange(range, player, data);
   let color = teamToColor(player>6?2:1);
 
   let time = data.time.data;
-  let status = reverseData(data.objective.status, player);
-  let ult  = reverseData(data.ult[player], player);
+  let status = data.objective.status;
+  let ult  = data.ult[player];
 
   let prevT = time[range[0]];
   let prevS = status[range[0]];
@@ -531,27 +543,26 @@ const toUltGroups = (data, player, range) => {
     let u = ult[i];
 
     if (
-      (s > 0 && prevS <= 0) ||
-      (s < 0 && prevS >= 0 && prevS !== null) ||
+      ((s >= 0 && s !== null) && (prevS < 0 || prevS === null)) ||
+      (s <= 0 && prevS > 0 && prevS !== null) ||
       (s === null && prevS > 0)
     ) {
       // Only color when status > 0
       prevT = t;
-      groups.push({color: s>0?color:'none', values: []});
+      groups.push({color: s<0||s===null?'none':color, values: []});
       groupIndex ++;
     }
-    groups[groupIndex].values.push({value: [t-prevT, s>0&&s!==null?u:0]});
+    groups[groupIndex].values.push({value: [t-prevT, s===null||s<0?0:u]});
     prevS = s;
   }
-
+  if (player > 6) groups.reverse();
   return groups;
 }
 
 const toDeathGroups = (data, player, range) => {
-  range = reverseRange(range, player, data);
   let time = data.time.data;
   let status = data.objective.status;
-  let health = reverseData(data['health'][player], player);
+  let health = data['health'][player];
 
   let prevT = time[range[0]];
   let prevS = status[range[0]];
@@ -563,7 +574,7 @@ const toDeathGroups = (data, player, range) => {
     let s = status[i];
     let h = health[i];
 
-    if ((s === -1 || s === null) && prevS > 0) {
+    if ((s<0 || s === null) && prevS > 0) {
       prevT = t;
       groups.push({death: false, values: []});
       groupIndex ++;
@@ -571,7 +582,6 @@ const toDeathGroups = (data, player, range) => {
       if (
         (h === 0 && prevH !== 0) ||
         (h === 1 && prevH === 0)
-        // (h === null && prevH === 0 && s > 0) // Between round counts as not dead
       ) {
         // Only color when status > 0
         prevT = t;
@@ -579,11 +589,11 @@ const toDeathGroups = (data, player, range) => {
         groupIndex ++;
       }
     }
-    groups[groupIndex].values.push({value: [t-prevT, h===0&&s>0?100:0]});
+    groups[groupIndex].values.push({value: [t-prevT, h===0&&s>=0&&s!==null?100:0]});
     prevS = s
     prevH = h;
   }
-
+  if (player > 6) groups.reverse();
   return groups;
 }
 
@@ -600,7 +610,6 @@ const toHeroGroups = (data, player, range) => {
   for (let i = range[0]; i < range[1]; i++) {
     let h = hero[i];
     if (h >= 0 && h !== prevH) {
-      // Only color when status > 0
       prevH = h;
       groups.push({
         ratio: reverseRatio((i-range[0])/r, player),
