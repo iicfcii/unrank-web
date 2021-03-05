@@ -104,7 +104,10 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
   const onStart = (event) => {
     let rect = containerRef.current.getBoundingClientRect();
     let clientY = event.touches?event.touches[0].clientY:event.clientY;
+
     let selectNew = Math.floor((clientY-rect.top)/(CHART_HEIGHT+CHART_GAP));
+    if (selectNew < 0 || selectNew > 5) return;
+
     let topOffset = (clientY-rect.top)-selectNew*(CHART_HEIGHT+CHART_GAP);
     setSelect(selectNew);
     setTop(selectNew*(CHART_HEIGHT+CHART_GAP));
@@ -235,7 +238,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
           <Stack interactiveChild='first'>
             <Box
               ref={containerRef}
-              style={{touchAction:'none',cursor:pressed?'grabbing':'auto'}}
+              style={{touchAction:'none',cursor:pressed?'grabbing':'auto',}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
               onMouseDown={(event) => {
                 // Prevent text drag and selection
@@ -243,10 +246,16 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                 setPressed(true);
               }}
               onMouseOut={onOut}
-              onTouchStart={() => setPressed(true)}
+              onTouchStart={() => {
+                setPressed(true);
+                // Prevent selecting other elements and clear existing selection
+                document.body.style.WebkitUserSelect='none';
+                window.getSelection().removeAllRanges();
+              }}
               onTouchMove={onMove}
               onTouchEnd={(event) => {
                 if (event.cancelable) event.preventDefault();
+                document.body.style.WebkitUserSelect='auto';
               }}>
             </Box>
             <Box fill>
