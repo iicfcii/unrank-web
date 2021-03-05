@@ -3,17 +3,19 @@ import { Box, Chart, Stack, Text } from 'grommet';
 import { MouseUpContext, formatSeconds } from '../utils';
 import { ReactComponent as AssaultIcon } from '../assets/assault-icon.svg';
 import { ReactComponent as EscortIcon } from '../assets/escort-icon.svg';
-import { ReactComponent as ControlIcon } from '../assets/control-icon.svg';
+// import { ReactComponent as ControlIcon } from '../assets/control-icon.svg';
 
 export const ObjectiveChart = ({data, range, onRangeChange}) => {
   const [dataGroups, setDataGroups] = useState([]);
   const [hoverInfo, setHoverInfo] = useState(null);
+  const [controlMapGroups, setControlMapGroups] = useState([]);
   const mouseUp = useContext(MouseUpContext);
 
   const totalRange = [0,data.time.data.length];
 
   useEffect(() => {
     setDataGroups(toDataGroups(data, [0,data.time.data.length]));
+    setControlMapGroups(toControlMapGroups(data, [0,data.time.data.length]))
   },[data]);
 
   let areaCharts = [];
@@ -73,6 +75,19 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
     }
   });
 
+  let controlMapCharts = [];
+  controlMapGroups.forEach((g, i) => {
+    controlMapCharts.push(
+      <Box
+        key={g.ratio}
+        style={{
+          position:'absolute', left:`${g.ratio*100}%`, top:'4px',
+        }}>
+        <Text size='small' color='textLight'>{`地图${g.map}`}</Text>
+      </Box>
+    );
+  });
+
   return(
     <Stack fill>
       {data.objective.type==='hybrid' && (<HybridLabel/>)}
@@ -96,6 +111,11 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
       <Box fill direction='row'>
         {lineCharts}
       </Box>
+      {data.objective.type==='control' && (
+        <Box fill direction='row'>
+          {controlMapCharts}
+        </Box>
+      )}
       {hoverInfo && (
         <Box
           fill='vertical' style={{marginLeft: hoverInfo.left+'px'}}
@@ -307,7 +327,7 @@ const toDataGroups = (data, range) => {
       ) {
         // Only color when status > 0
         prevT = t;
-        dataGroups.push({color: s<0||s===null?'none':chartColor(s), values: []});
+        dataGroups.push({color: chartColor(s), values: []});
         groupIndex ++;
       }
       let p;
@@ -317,6 +337,21 @@ const toDataGroups = (data, range) => {
     }
     return dataGroups;
   }
+}
+
+const toControlMapGroups = (data, range) => {
+  if (data.objective.type !== 'control') return [];
+
+  let r = range[1]-range[0]-1;
+  let map = data.objective.map;
+
+  let groups = [];
+  for (let i = range[0]; i < range[1]; i++) {
+    if (map[i] !== null && map[i-1] === null) {
+      groups.push({map: map[i], ratio: (i-range[0])/r});
+    }
+  }
+  return groups;
 }
 
 export const toProgress = (i, progress, type) => {

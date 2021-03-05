@@ -419,35 +419,34 @@ const UltChart = ({data, player, range}) => {
     }
   });
 
-
-    let deathCharts = [];
-    deathGroups.forEach((g, i) => {
-      let length = g.values.length;
-      // Change the key based on states so that Chart will rerender
-      let key = range[0].toString()+range[1].toString();
-      if (!g.death) {
-        deathCharts.push(
-          <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
-            <Chart
-              key={key}
-              size='fill' type='area' thickness='0px'
-              bounds={[[0,length],[0,100]]}
-              values={g.values}/>
-          </Box>
-        );
-      } else {
-        deathCharts.push(
-          <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
-            <Chart
-              key={key}
-              size='fill' color='line'
-              type='area' thickness='0px'
-              bounds={[[0,length],[0,100]]}
-              values={g.values}/>
-          </Box>
-        );
-      }
-    });
+  let deathCharts = [];
+  deathGroups.forEach((g, i) => {
+    let length = g.values.length;
+    // Change the key based on states so that Chart will rerender
+    let key = range[0].toString()+range[1].toString();
+    if (!g.death) {
+      deathCharts.push(
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+          <Chart
+            key={key}
+            size='fill' type='area' thickness='0px'
+            bounds={[[0,length],[0,100]]}
+            values={g.values}/>
+        </Box>
+      );
+    } else {
+      deathCharts.push(
+        <Box key={i} fill='vertical' style={{width:length/(range[1]-range[0])*100+'%'}}>
+          <Chart
+            key={key}
+            size='fill' color='line'
+            type='area' thickness='0px'
+            bounds={[[0,length],[0,100]]}
+            values={g.values}/>
+        </Box>
+      );
+    }
+  });
 
   let heroPoints = [];
   heroGroups.forEach((g, i) => {
@@ -535,7 +534,7 @@ const toUltGroups = (data, player, range) => {
 
   let prevT = time[range[0]];
   let prevS = status[range[0]];
-  let groups = [{color: prevS>0?color:'none', values: []}];
+  let groups = [{color: prevS<0||prevS===null?'none':color, values: []}];
   let groupIndex = 0;
   for (let i = range[0]; i < range[1]; i++) {
     let s = status[i];
