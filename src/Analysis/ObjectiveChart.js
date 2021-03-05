@@ -3,6 +3,7 @@ import { Box, Chart, Stack, Text } from 'grommet';
 import { MouseUpContext, formatSeconds } from '../utils';
 import { ReactComponent as AssaultIcon } from '../assets/assault-icon.svg';
 import { ReactComponent as EscortIcon } from '../assets/escort-icon.svg';
+import { ReactComponent as ControlIcon } from '../assets/control-icon.svg';
 
 export const ObjectiveChart = ({data, range, onRangeChange}) => {
   const [dataGroups, setDataGroups] = useState([]);
@@ -74,14 +75,20 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
 
   return(
     <Stack fill>
-      {data.objective.type==='hybrid' && (
-        <HybridLabel/>
+      {data.objective.type==='hybrid' && (<HybridLabel/>)}
+      {data.objective.type==='assault' && (<AssaultLabel/>)}
+      {data.objective.type==='assault'?(
+        <Box fill>
+          <GridLine label='100'/>
+          <GridLine label='50'/>
+        </Box>
+      ):(
+        <Box fill>
+          <GridLine label='100'/>
+          <GridLine label='66'/>
+          <GridLine label='33'/>
+        </Box>
       )}
-      <Box fill>
-        <GridLine label='100'/>
-        <GridLine label='66'/>
-        <GridLine label='33'/>
-      </Box>
       <GridLineBottom/>
       <Box fill direction='row'>
         {areaCharts}
@@ -188,8 +195,21 @@ const GridLineBottom = (props) => {
 const HybridLabel = () => {
   return (
     <Box fill style={{position:'relative'}}>
-      <Box fill justify='center'>
+      <Box height={`${100/3*2}%`} justify='center'>
         <Icon icon={(<EscortIcon style={{fill: '#8B8C8E'}}/>)}/>
+      </Box>
+      <Box height={`${100/3}%`} justify='center'>
+        <Icon icon={(<AssaultIcon style={{fill: '#8B8C8E'}}/>)}/>
+      </Box>
+    </Box>
+  );
+}
+
+const AssaultLabel = () => {
+  return (
+    <Box fill style={{position:'relative'}}>
+      <Box fill justify='center'>
+        <Icon icon={(<AssaultIcon style={{fill: '#8B8C8E'}}/>)}/>
       </Box>
       <Box fill justify='center'>
         <Icon icon={(<AssaultIcon style={{fill: '#8B8C8E'}}/>)}/>
@@ -201,12 +221,7 @@ const HybridLabel = () => {
 const Icon = ({icon}) => {
   return (
     <Box
-      style={{
-        position:'relative',
-        marginTop: '2px',
-        marginLeft: '-52px',
-        transform: 'translate(0%,50%)'
-      }}
+      style={{position:'relative',marginLeft: '-52px'}}
       width='24px' height='24px'>
       {icon}
     </Box>
@@ -292,6 +307,10 @@ export const toProgress = (i, progress, type) => {
     if (type==='hybrid') {
       p = progress.point[i]/3;
       if (p === 100/3) p = progress.payload[i]/3*2+p;
+    } else if (type === 'assault'){
+      p = progress['A'][i]/2;
+      if (p === 100/2) p = progress['B'][i]/2+p;
+      console.log('p')
     } else {
       p = progress[i];
     }
