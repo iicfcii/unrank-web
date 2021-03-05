@@ -1,5 +1,9 @@
 import { useState, useEffect, createContext } from 'react';
 
+export const capitalize = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 export const teamToColor = (team) => {
   if (team === 2) return 'red';
   return 'blue';
@@ -45,7 +49,7 @@ export const useMouseUp = () => {
       document.removeEventListener('touchstart', onMouseDown);
       document.removeEventListener('touchend', onMouseUp);
     }
-  },[])
+  },[]);
 
   return mouseUp;
 }

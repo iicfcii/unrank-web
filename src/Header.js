@@ -11,7 +11,7 @@ export const Header = (props) => {
   const [select, setSelect] = useState(HOME_LABEL);
 
   let matchHome = useRouteMatch('/');
-  let matchDemo = useRouteMatch('/analysis');
+  let matchDemo = useRouteMatch('/demo');
   let matchAbout = useRouteMatch('/about');
   let matchLegal = useRouteMatch('/legal');
 
@@ -37,7 +37,7 @@ export const Header = (props) => {
           to={'/'}/>
         <Item
           label={DEMO_LABEL} select={select===DEMO_LABEL}
-          to={'/analysis'}/>
+          to={'/demo'}/>
         <Item
           label={ABOUT_LABEL} select={select===ABOUT_LABEL}
           to={'/about'}/>

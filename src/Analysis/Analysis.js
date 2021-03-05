@@ -4,7 +4,7 @@ import { Info } from './Info';
 import { Objective } from './Objective';
 import { Table } from './Table';
 import { Detail } from './Detail';
-import data from '../assets/DEMO.json';
+import data from '../assets/HYBRID.json';
 
 export const Analysis = (props) => {
   const [range, setRange] = useState([0,data.time.data.length]);
