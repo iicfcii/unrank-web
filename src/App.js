@@ -6,7 +6,7 @@ import { theme } from './theme';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Home } from './Home/Home';
-import { Analysis } from './Analysis/Analysis';
+import { Demo } from './Demo/Demo';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
 import { MouseUpContext, useMouseUp } from './utils';
@@ -27,7 +27,7 @@ const App = () => {
               <About />
             </Route>
             <Route path='/demo'>
-              <Analysis />
+              <Demo />
             </Route>
             <Route path='/'>
               <Home />
