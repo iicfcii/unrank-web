@@ -190,6 +190,7 @@ export const TimeSelector = ({range, max, onChange, reverse}) => {
         <Stack fill interactiveChild='first'>
           <Box
             fill
+            style={{touchAction:'none'}}
             onMouseDown={onStart}
             onTouchStart={onStart}
             onTouchMove={onMove}

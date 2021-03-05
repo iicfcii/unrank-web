@@ -8,7 +8,7 @@ import { Detail } from './Detail';
 export const DataViewer = ({data}) => {
   const [range, setRange] = useState([0,data.time.data.length]);
   const [hideTable, setHideTable] = useState(true);
-  const [hideDetail, setHideDetail] = useState(true);
+  const [hideDetail, setHideDetail] = useState(false);
 
   useEffect(() => {
     setRange([0,data.time.data.length]);
@@ -32,11 +32,10 @@ export const DataViewer = ({data}) => {
         <Detail
           team={1} data={data} range={range} onRangeChange={setRange}
           hide={hideDetail} onHide={setHideDetail}/>
+        <Detail
+          team={2} data={data} range={range} onRangeChange={setRange}
+          hide={hideDetail} onHide={setHideDetail}/>
       </Box>
     </Box>
   );
 }
-
-// <Detail
-//   team={2} data={data} range={range} onRangeChange={setRange}
-//   hide={hideDetail} onHide={setHideDetail}/>
