@@ -1,4 +1,16 @@
-import { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect, createContext } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import styled from 'styled-components';
+
+const StyledLink = styled(RouterLink)`
+    text-decoration: none;
+    color: inherit;
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 1px 1px #cfd7df;
+    }
+`
+export const Link = (props) => <StyledLink {...props}/>;
 
 export const capitalize = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);

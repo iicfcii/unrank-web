@@ -15,7 +15,7 @@ const DEMOS = {
 }
 
 export const Demo = (props) => {
-  const [type, setType] = useState('Escort');
+  const [type, setType] = useState('Assault');
 
   return(
     <Box pad={{vertical: 'medium', horizontal: 'large'}} gap='medium'>
@@ -26,7 +26,9 @@ export const Demo = (props) => {
             <Select
               options={Object.keys(DEMOS)}
               value={type}
-              onChange={({value}) => setType(value)}/>
+              onChange={({value}) => {
+                if (value !== type) setType(value);
+              }}/>
           </Box>
         </Box>
       </StatBox>

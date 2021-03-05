@@ -344,6 +344,10 @@ const UltChartEmpty = () => {
 }
 
 const UltChart = ({data, player, range}) => {
+  // Range may not be updated yet
+  if (range[1] > data.time.data.length) range[1] = data.time.data.length;
+  if (range[0] < 0) range[0] = 0;
+
   const [ultGroups, setUltGroups] = useState([]);
   const [ultUseGroups, setUltUseGroups] = useState([]);
   const [heroGroups, setHeroGroups] = useState([]);

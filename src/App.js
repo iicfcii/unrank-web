@@ -7,6 +7,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { Home } from './Home/Home';
 import { Demo } from './Demo/Demo';
+import { Analysis } from './Analysis/Analysis';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
 import { MouseUpContext, useMouseUp } from './utils';
@@ -28,6 +29,9 @@ const App = () => {
             </Route>
             <Route path='/demo'>
               <Demo />
+            </Route>
+            <Route path='/analysis'>
+              <Analysis />
             </Route>
             <Route path='/'>
               <Home />
