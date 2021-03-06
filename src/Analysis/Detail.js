@@ -12,13 +12,13 @@ const CHART_GAP = 24;
 const CHART_HEIGHT = 96;
 
 export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
-  const [pressed, setPressed] = useState(false);
   const [select, setSelect] = useState(null); // Selected chart(0,1,2,3,4,5)
   const [order, setOrder] = useState(teamToPlayers(team));
   const [top, setTop] = useState(null);
   const [topOffset, setTopOffset] = useState(null);
   const [hoverInfo, setHoverInfo] = useState(null);
   const containerRef = useRef(null);
+  const pressStarted = useRef(false);
 
   const onTap = useCallback((event) => {
     if (!containerRef.current) return;
@@ -113,6 +113,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     setTop(selectNew*(CHART_HEIGHT+CHART_GAP));
     setTopOffset(topOffset);
     setHoverInfo(null);
+
+    // Prevent scrolling on touch devices
+    if (event.touches) document.body.style.overflow = 'hidden';
   };
 
   const onMove = useCallback((event) => {
@@ -139,43 +142,43 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
 
     if (event.touches) {
       if (select === null) {
-        onStart(event);
+        pressStarted.current = false;
       } else {
         onDrag(event);
       }
     } else {
-      if (!pressed) return;
+      if (!pressStarted) return;
       if (select === null) {
-        onStart(event);
       } else {
         onDrag(event);
       }
     }
-  },[select, pressed, order, topOffset]);
+  },[select, order, topOffset]);
 
   const onRelease = useCallback((event) => {
-    if (!pressed) {
+    if (!pressStarted.current) {
       setHoverInfo(null);
     }
 
-    if (pressed && select === null) {
+    if (pressStarted.current && select === null) {
       onTap(event);
     }
 
     if (select !== null) {
+      document.body.style.overflow = '';
       setSelect(null);
       setTopOffset(null);
     }
 
-    setPressed(false);
-  },[select, pressed, onTap]);
+    pressStarted.current = false;
+  },[select, onTap]);
 
   useEffect(() => {
     document.addEventListener('mousemove', onMove);
     return () => {
       document.removeEventListener('mousemove', onMove);
     }
-  },[onMove, pressed])
+  },[onMove])
 
   useEffect(() => {
     document.addEventListener('mouseup', onRelease);
@@ -238,16 +241,24 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
           <Stack interactiveChild='first'>
             <Box
               ref={containerRef}
-              style={{touchAction:'none',cursor:pressed?'grabbing':'auto'}}
+              style={{cursor:select?'grabbing':'auto'}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
               onMouseDown={(event) => {
                 // Prevent text drag and selection
                 if (!event.touches) event.preventDefault();
-                setPressed(true);
+
+                pressStarted.current = true;
+                setTimeout(() => {
+                  if (pressStarted.current) onStart(event);
+                },1000);
               }}
               onMouseOut={onOut}
-              onTouchStart={() => {
-                setPressed(true);
+              onTouchStart={(event) => {
+                pressStarted.current = true;
+                setTimeout(() => {
+                  if (pressStarted.current) onStart(event);
+                },1000);
+
                 // Prevent selecting other elements and clear existing selection
                 document.body.style.WebkitUserSelect='none';
                 window.getSelection().removeAllRanges();
@@ -255,7 +266,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               onTouchMove={onMove}
               onTouchEnd={(event) => {
                 if (event.cancelable) event.preventDefault();
-                document.body.style.WebkitUserSelect='auto';
+                document.body.style.WebkitUserSelect='';
               }}>
             </Box>
             <Box fill>
