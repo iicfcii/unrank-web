@@ -15,7 +15,7 @@ const DEMOS = {
 }
 
 export const Demo = (props) => {
-  const [type, setType] = useState('Assault');
+  const [type, setType] = useState('Escort');
 
   return(
     <Box pad={{vertical: 'medium', horizontal: 'large'}} gap='medium'>

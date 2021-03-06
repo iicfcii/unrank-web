@@ -7,8 +7,8 @@ import { Detail } from './Detail';
 
 export const DataViewer = ({data}) => {
   const [range, setRange] = useState([0,data.time.data.length]);
-  const [hideTable, setHideTable] = useState(true);
-  const [hideDetail, setHideDetail] = useState(false);
+  const [hideTable, setHideTable] = useState(false);
+  const [hideDetail, setHideDetail] = useState(true);
 
   useEffect(() => {
     setRange([0,data.time.data.length]);

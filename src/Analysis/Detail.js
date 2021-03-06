@@ -244,7 +244,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
           <Stack interactiveChild='first'>
             <Box
               ref={containerRef}
-              style={{cursor:select?'grabbing':'auto'}}
+              style={{cursor:select!==null?'grabbing':'auto'}}
               height={`${(CHART_HEIGHT+CHART_GAP)*6}px`}
               onMouseDown={(event) => {
                 // Prevent text drag and selection
