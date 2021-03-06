@@ -260,7 +260,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                 pressStarted.current = true;
                 setTimeout(() => {
                   if (pressStarted.current) onStart(event);
-                },1000);
+                },5000);
 
                 // Prevent selecting other elements and clear existing selection
                 document.body.style.WebkitUserSelect='none';

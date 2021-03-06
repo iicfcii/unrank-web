@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext } from 'react';
+import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -37,31 +37,4 @@ export const formatSeconds = (s) => {
   if (min === 0) return `${sec}秒`;
 
   return `${min}分${sec}秒`;
-}
-
-export const MouseUpContext = createContext(true);
-
-export const useMouseUp = () => {
-  const [mouseUp, setMouseUp] = useState(true);
-
-  useEffect(() => {
-    let onMouseDown = () => {
-      setMouseUp(false);
-    };
-    let onMouseUp = () => {
-      setMouseUp(true);
-    }
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('touchstart', onMouseDown);
-    document.addEventListener('touchend', onMouseUp);
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.removeEventListener('touchstart', onMouseDown);
-      document.removeEventListener('touchend', onMouseUp);
-    }
-  },[]);
-
-  return mouseUp;
 }

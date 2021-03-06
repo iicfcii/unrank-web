@@ -10,37 +10,33 @@ import { Demo } from './Demo/Demo';
 import { Analysis } from './Analysis/Analysis';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
-import { MouseUpContext, useMouseUp } from './utils';
 
 const App = () => {
-  const mouseUp = useMouseUp();
 
   return (
-    <MouseUpContext.Provider value={mouseUp}>
-      <Router>
-        <Grommet theme={theme}>
-          <Header/>
-          <Switch>
-            <Route path='/legal'>
-              <Legal />
-            </Route>
-            <Route path='/about'>
-              <About />
-            </Route>
-            <Route path='/demo'>
-              <Demo />
-            </Route>
-            <Route path='/analysis'>
-              <Analysis />
-            </Route>
-            <Route path='/'>
-              <Home />
-            </Route>
-          </Switch>
-          <Footer/>
-        </Grommet>
-      </Router>
-    </MouseUpContext.Provider>
+    <Router>
+      <Grommet theme={theme}>
+        <Header/>
+        <Switch>
+          <Route path='/legal'>
+            <Legal />
+          </Route>
+          <Route path='/about'>
+            <About />
+          </Route>
+          <Route path='/demo'>
+            <Demo />
+          </Route>
+          <Route path='/analysis'>
+            <Analysis />
+          </Route>
+          <Route path='/'>
+            <Home />
+          </Route>
+        </Switch>
+        <Footer/>
+      </Grommet>
+    </Router>
   );
 }
 

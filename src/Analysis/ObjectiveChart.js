@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
-import { MouseUpContext, formatSeconds } from '../utils';
+import { formatSeconds } from '../utils';
 import { ReactComponent as AssaultIcon } from '../assets/assault-icon.svg';
 import { ReactComponent as EscortIcon } from '../assets/escort-icon.svg';
 // import { ReactComponent as ControlIcon } from '../assets/control-icon.svg';
@@ -9,8 +9,6 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
   const [dataGroups, setDataGroups] = useState([]);
   const [hoverInfo, setHoverInfo] = useState(null);
   const [controlMapGroups, setControlMapGroups] = useState([]);
-  const mouseUp = useContext(MouseUpContext);
-
   const totalRange = [0,data.time.data.length];
 
   useEffect(() => {
@@ -165,12 +163,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
       <Box
         fill
         onMouseMove={(event) => {
-          if (!mouseUp) {
-            // Hover only works when mouse not pressed
-            setHoverInfo(null);
-          } else {
-            setHoverInfo(toHoverInfo(event, data, totalRange));
-          }
+          setHoverInfo(toHoverInfo(event, data, totalRange));
         }}
         onMouseOut={() => {
           setHoverInfo(null);
