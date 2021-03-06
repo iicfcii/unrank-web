@@ -149,6 +149,9 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     } else {
       if (!pressStarted) return;
       if (select === null) {
+        let v = Math.pow(event.movementX,2)+Math.pow(event.movementY,2)
+        // Move slowly consider as holding
+        if (v > 40) pressStarted.current = false;
       } else {
         onDrag(event);
       }
