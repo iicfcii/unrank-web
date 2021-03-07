@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Box, Chart, Stack, Text } from 'grommet';
 import { FormClose, CaretDownFill, LineChart } from 'grommet-icons';
 import { StatBox } from './StatBox';
@@ -19,6 +19,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
   const [hoverInfo, setHoverInfo] = useState(null);
   const containerRef = useRef(null);
   const pressStarted = useRef(false);
+  const longPressTimeout = useRef(null);
 
   const onTap = useCallback((event) => {
     if (!containerRef.current) return;
@@ -142,7 +143,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
 
     if (event.touches) {
       if (select === null) {
-        pressStarted.current = false;
+        // pressStarted.current = false;
       } else {
         onDrag(event);
       }
@@ -159,11 +160,14 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
   },[select, order, topOffset]);
 
   const onRelease = useCallback((event) => {
-    if (!pressStarted.current) {
+    let pressed = pressStarted.current;
+    pressStarted.current = false;
+
+    if (!pressed) {
       setHoverInfo(null);
     }
 
-    if (pressStarted.current && select === null) {
+    if (pressed && select === null) {
       onTap(event);
     }
 
@@ -172,9 +176,12 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
       setSelect(null);
       setTopOffset(null);
     }
-
-    pressStarted.current = false;
   },[select, onTap]);
+
+  const onTSRangeChange = useCallback((values) => {
+    let rangeNew = [values[0],values[1]+1]
+    if(onRangeChange) onRangeChange(rangeNew);
+  },[onRangeChange]);
 
   useEffect(() => {
     document.addEventListener('mousemove', onMove);
@@ -214,7 +221,7 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
     <StatBox fill>
       <TeamHeader
         team={team} hide={hide} onHide={onHide}
-          icon={(<LineChart size='24px' color={teamToColor(team)}/>)}/>
+        icon={(<LineChart size='24px' color={teamToColor(team)}/>)}/>
       {!hide && (
         <Box>
           <Box
@@ -251,16 +258,18 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                 if (!event.touches) event.preventDefault();
 
                 pressStarted.current = true;
-                setTimeout(() => {
+                clearTimeout(longPressTimeout.current);
+                longPressTimeout.current = setTimeout(() => {
                   if (pressStarted.current) onStart(event);
                 },1000);
               }}
               onMouseOut={onOut}
               onTouchStart={(event) => {
                 pressStarted.current = true;
-                setTimeout(() => {
+                clearTimeout(longPressTimeout.current);
+                longPressTimeout.current = setTimeout(() => {
                   if (pressStarted.current) onStart(event);
-                },5000);
+                },2000);
 
                 // Prevent selecting other elements and clear existing selection
                 document.body.style.WebkitUserSelect='none';
@@ -324,19 +333,22 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
               )}
             </Box>
           </Stack>
-          <TimeSelector
-            reverse={team===2}
-            range={[range[0],range[1]-1]}
-            max={data.time.data.length-1}
-            onChange={(values) => {
-              let rangeNew = [values[0],values[1]+1]
-              if(onRangeChange) onRangeChange(rangeNew);
-            }}/>
+          <Time data={data} team={team} range={range} onChange={onTSRangeChange}/>
         </Box>
       )}
     </StatBox>
   );
 }
+
+const Time = memo(({data, team, range, onChange}) => {
+  return (
+    <TimeSelector
+      reverse={team===2}
+      range={[range[0],range[1]-1]}
+      max={data.time.data.length-1}
+      onChange={onChange}/>
+  );
+});
 
 const Info = ({label, value}) => {
   return (
@@ -357,7 +369,7 @@ const UltChartEmpty = () => {
   );
 }
 
-const UltChart = ({data, player, range}) => {
+const UltChart = memo(({data, player, range}) => {
   // Range may not be updated yet
   if (range[1] > data.time.data.length) range[1] = data.time.data.length;
   if (range[0] < 0) range[0] = 0;
@@ -535,7 +547,7 @@ const UltChart = ({data, player, range}) => {
       </Stack>
     </Box>
   );
-}
+});
 
 const GridLine = (props) => {
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Box, Text, Stack } from 'grommet';
 import { TextAlignLeft } from 'grommet-icons';
 import { StatBox } from './StatBox';
@@ -107,7 +107,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
 
     if (event.touches) {
       if (!select) {
-        pressStarted.current = false;
+        // pressStarted.current = false;
       } else{
         onDrag();
       }
@@ -129,10 +129,10 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const onRelease = useCallback((event) => {
     if (!pressStarted.current) {
       setHoverInfo(null);
-    } else
-
-    if (event.touches && select === null) {
-      onHover(event);
+    } else {
+      if (event.touches && select === null) {
+        onHover(event);
+      }
     }
 
     setSelect(null);
@@ -271,8 +271,26 @@ export const Table = ({data, team, range, hide, onHide}) => {
   );
 }
 
+const rowPropsNotChanged = (prevProps, nextProps) => {
+  let notEqual = Object.keys(prevProps).some((key) => {
+    if (key !== 'hero') {
+      return prevProps[key] !== nextProps[key]
+    } else {
+      if (prevProps[key].length !== nextProps[key].length) {
+        return true;
+      } else {
+        return prevProps[key].some((ph,i) => {
+          let nh = nextProps[key][i];
+          return ph[0] !== nh[0] || ph[1] !== nh[1];
+        });
+      }
+    }
+  });
+  return !notEqual;
+}
+
 // Interaction area
-const RowArea = ({player, team, hero, select}) => {
+const RowArea = memo(({player, team, hero, select}) => {
   let total = 0;
   hero.forEach((h) => total += h[1]);
 
@@ -280,6 +298,7 @@ const RowArea = ({player, team, hero, select}) => {
   hero.forEach((h,i) => {
     subBarAreas.push(
       <Box
+        background='red'
         key={i} id={`sub-bar-${h[0]}`} height='100%'
         style={{width:`${h[1]/total*100}%`}}>
       </Box>
@@ -299,9 +318,9 @@ const RowArea = ({player, team, hero, select}) => {
       <ValueContainer></ValueContainer>
     </Box>
   );
-}
+},rowPropsNotChanged);
 
-const Row = ({
+const Row = memo(({
   player, team,
   hero,
   ult, ultMax,
@@ -321,7 +340,7 @@ const Row = ({
       <ValueChart value={elim} max={elimMax} team={team}/>
     </Box>
   );
-}
+},rowPropsNotChanged);
 
 const EmptyRow = () => {
   return (
