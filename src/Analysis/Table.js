@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Box, Text, Stack } from 'grommet';
 import { TextAlignLeft } from 'grommet-icons';
 import { StatBox } from './StatBox';
@@ -17,6 +17,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
   const [areaOrder, setAreaOrder] = useState(teamToPlayers(team)); // Order for the underneath interaction area, synced with order after drag is completed
   const [hoverInfo, setHoverInfo] = useState(null);
   const containerRef = useRef(null);
+  const pressStarted = useRef(false);
 
   let heroData = calcHero(data, range, team);
   let ultData = calcUlt(data, range, team);
@@ -47,7 +48,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
   }
 
   const onStart = (event) => {
-    setHoverInfo(null);
     let rowNode = event.target.closest("[id^='row']");
     if (!rowNode) return;
 
@@ -61,6 +61,9 @@ export const Table = ({data, team, range, hide, onHide}) => {
     setTop(calcTop(clientY, topOffsetNew, rect));
     setTopOffset(topOffsetNew);
     setSelect(player);
+
+    // Prevent scrolling on touch devices
+    if (event.touches) document.body.style.overflow = 'hidden';
   }
 
   const onHover = useCallback((event) => {
@@ -68,14 +71,10 @@ export const Table = ({data, team, range, hide, onHide}) => {
 
     let rect;
     if (event.target.id.includes('sub-bar')){
-      rect =  event.target.getBoundingClientRect();
+      rect = event.target.getBoundingClientRect();
     }
 
-    if (
-      !rect ||
-      rect.width > 40 ||
-      (event.touches && hoverInfo)
-    ) {
+    if (!rect || rect.width > 40) {
       setHoverInfo(null);
       return;
     }
@@ -86,7 +85,7 @@ export const Table = ({data, team, range, hide, onHide}) => {
     let left = rect.left-rectContainer.left+(team===2?-2:rect.width+2);
     let top = rect.top-rectContainer.top+rect.height/2;
     setHoverInfo([left,top,hero]);
-  }, [hoverInfo, team]);
+  }, [team]);
 
   const onMove = useCallback((event) => {
     // Same logic for mouse or touch moving
@@ -108,28 +107,40 @@ export const Table = ({data, team, range, hide, onHide}) => {
 
     if (event.touches) {
       if (!select) {
-        onStart(event); // Only select when moves for touch
+        // pressStarted.current = false;
       } else{
         onDrag();
       }
     } else {
-      if (!select) {
+      if (!pressStarted.current) {
         onHover(event);
       } else {
-        onDrag();
+        if (!select) {
+          let v = Math.pow(event.movementX,2)+Math.pow(event.movementY,2)
+          // Move slowly consider as holding
+          if (v > 40) pressStarted.current = false;
+        } else {
+          onDrag();
+        }
       }
     }
   }, [select, onHover, order, topOffset]);
 
   const onRelease = useCallback((event) => {
-    if (event.touches) {
-      onHover(event);
+    if (!pressStarted.current) {
+      setHoverInfo(null);
+    } else {
+      if (event.touches && select === null) {
+        onHover(event);
+      }
     }
 
     setSelect(null);
     setTop(null);
     setAreaOrder(order);
-  },[order, onHover]);
+    pressStarted.current = false;
+    document.body.style.overflow = '';
+  },[order, onHover, select]);
 
   useEffect(() => {
     document.addEventListener('mousemove', onMove);
@@ -152,10 +163,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
     rowAreas.push(
       <RowArea key={player} player={player} team={team} hero={heroData[player]} select={select}/>
     );
-    if (i < 5)
-    rowAreas.push(
-      <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
-    ); // Manual Gap
   });
 
   let rows = [];
@@ -174,10 +181,6 @@ export const Table = ({data, team, range, hide, onHide}) => {
           elim={elimData[player]} elimMax={elimMax}/>
       );
     }
-    if (i < 5)
-    rows.push(
-      <Box key={player+'gap'} fill='horizontal' height={`${ROW_GAP}px`}></Box>
-    ); // Manual Gap
   });
 
   let rowHover = null;
@@ -205,10 +208,29 @@ export const Table = ({data, team, range, hide, onHide}) => {
             <Box
               ref={containerRef}
               style={{cursor:select?'grabbing':'auto'}}
-              onMouseDown={onStart}
+              onMouseDown={(event) => {
+                // Prevent text drag and selection
+                if (!event.touches) event.preventDefault();
+
+                pressStarted.current = true;
+                setTimeout(() => {
+                  if (pressStarted.current) onStart(event);
+                },1000);
+              }}
+              onTouchStart={(event) => {
+                pressStarted.current = true;
+                setTimeout(() => {
+                  if (pressStarted.current) onStart(event);
+                },1000);
+
+                // Prevent selecting other elements and clear existing selection
+                document.body.style.WebkitUserSelect='none';
+                window.getSelection().removeAllRanges();
+              }}
               onTouchMove={onMove}
               onTouchEnd={(event) => {
                 if (event.cancelable) event.preventDefault();
+                document.body.style.WebkitUserSelect='';
               }}>
               {rowAreas}
             </Box>
@@ -249,8 +271,26 @@ export const Table = ({data, team, range, hide, onHide}) => {
   );
 }
 
+const rowPropsNotChanged = (prevProps, nextProps) => {
+  let notEqual = Object.keys(prevProps).some((key) => {
+    if (key !== 'hero') {
+      return prevProps[key] !== nextProps[key]
+    } else {
+      if (prevProps[key].length !== nextProps[key].length) {
+        return true;
+      } else {
+        return prevProps[key].some((ph,i) => {
+          let nh = nextProps[key][i];
+          return ph[0] !== nh[0] || ph[1] !== nh[1];
+        });
+      }
+    }
+  });
+  return !notEqual;
+}
+
 // Interaction area
-const RowArea = ({player, team, hero, select}) => {
+const RowArea = memo(({player, team, hero, select}) => {
   let total = 0;
   hero.forEach((h) => total += h[1]);
 
@@ -258,8 +298,9 @@ const RowArea = ({player, team, hero, select}) => {
   hero.forEach((h,i) => {
     subBarAreas.push(
       <Box
+        background='red'
         key={i} id={`sub-bar-${h[0]}`} height='100%'
-        style={{width:`${h[1]/total*100}%`, cursor:'default'}}>
+        style={{width:`${h[1]/total*100}%`}}>
       </Box>
     );
   });
@@ -267,10 +308,8 @@ const RowArea = ({player, team, hero, select}) => {
   return (
     <Box
       id={`row-${player}`}
-      style={{touchAction:'none',cursor:select?'grabbing':'grab'}}
-      direction={teamToRowDirection(team)} height={`${ROW_HEIGHT}px`}
-      align='center' justify='between' gap='xlarge'
-      border={{color:'black', size:'1px', side:'bottom', style:'solid'}}>
+      direction={teamToRowDirection(team)} height={`${ROW_HEIGHT+ROW_GAP}px`}
+      align='center' justify='between' gap='xlarge'>
       <BarContainer team={team}>
         {subBarAreas}
       </BarContainer>
@@ -279,9 +318,9 @@ const RowArea = ({player, team, hero, select}) => {
       <ValueContainer></ValueContainer>
     </Box>
   );
-}
+},rowPropsNotChanged);
 
-const Row = ({
+const Row = memo(({
   player, team,
   hero,
   ult, ultMax,
@@ -292,7 +331,7 @@ const Row = ({
 
   return(
     <Box
-      direction={direction} height={`${ROW_HEIGHT}px`}
+      direction={direction} height={`${ROW_HEIGHT+ROW_GAP}px`}
       align='center' justify='between' gap='xlarge' background='white'
       border={{color:'lineLight', size:'1px', side:'bottom', style:'solid'}}>
       <BarChart data={hero} team={team}/>
@@ -301,12 +340,12 @@ const Row = ({
       <ValueChart value={elim} max={elimMax} team={team}/>
     </Box>
   );
-}
+},rowPropsNotChanged);
 
 const EmptyRow = () => {
   return (
     <Box
-      height={`${ROW_HEIGHT}px`} fill='horizontal'
+      height={`${ROW_HEIGHT+ROW_GAP}px`} fill='horizontal'
       background='backgroundLight'
       border={{color:'lineLight', size:'1px', side:'all', style:'solid'}}>
     </Box>
@@ -400,7 +439,7 @@ const ValueChart = ({value, max, team}) => {
 const BarContainer = (props) => {
   return(
     <Box
-      width='295px' height='40px'
+      width='295px' height='40px' margin={{vertical:`${ROW_GAP/2}px`}}
       gap='xxxsmall' direction={teamToRowDirection(props.team)}>
       {props.children}
     </Box>
@@ -419,7 +458,7 @@ const HeroAvatar = ({avatar}) => {
 
 const ValueContainer = (props) => {
   return(
-    <Box width='128px' height='40px'>
+    <Box width='128px' height='40px' margin={{vertical:`${ROW_GAP/2}px`}}>
       {props.children}
     </Box>
   )

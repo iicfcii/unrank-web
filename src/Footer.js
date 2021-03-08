@@ -1,6 +1,6 @@
 import React from 'react';
-import { Link } from "react-router-dom";
 import { Box, Text } from 'grommet';
+import { Link } from './utils';
 
 export const Footer = (props) => {
   return(
@@ -12,11 +12,11 @@ export const Footer = (props) => {
         <Text size='small'>©2020 Unrank.gg</Text>
       </Box>
       <Box direction='row' align='center' gap='medium'>
-        <Link to={'/about'} style={{textDecoration:'none', color:'inherit'}}>
+        <Link to={'/about'}>
           <Text size='small'>联系我们</Text>
         </Link>
         <Box width='1px' height='14px' background='border'></Box>
-        <Link to={'/legal'} style={{textDecoration:'none', color:'inherit'}}>
+        <Link to={'/legal'}>
           <Text size='small'>隐私和条款</Text>
         </Link>
       </Box>

@@ -6,6 +6,24 @@ export const theme = {
     font: {
       family: 'Noto Sans SC',
     },
+    // active: {
+    //   background: {
+    //     color: 'active',
+    //     opacity: 'medium',
+    //   },
+    //   color: {
+    //     dark: 'white',
+    //     light: 'black',
+    //   },
+    // },
+    // selected: {
+    //   background: 'selected',
+    //   color: 'white',
+    // },
+    hover: {
+      color: 'black',
+      background:'background',
+    },
     colors:{
       brand: '#F18805',
       orange: '#F18805',
@@ -20,6 +38,7 @@ export const theme = {
       line: '#E1E1E1',
       lineLight: '#EFEFEF',
       placeholder: '#9E9E9E',
+      selectd: 'brand'
     },
     focus: {
       border: undefined,
@@ -84,7 +103,10 @@ export const theme = {
     },
   },
   textInput: {
-    extend: 'background: #ECECEC;'
+    extend: `
+      background: #FBFBFB;
+      padding: 5px 8px;
+    `
   },
   button: {
     color: 'white',
@@ -130,5 +152,28 @@ export const theme = {
   },
   grommet: {
     extend:'min-width:1024px;'
+  },
+  select: {
+    background:'backgroundLight',
+    control: {
+      extend: `
+        border: 1px solid #E1E1E1;
+      `
+    },
+    container: {
+      extend: `background: #FBFBFB;`
+    },
+    options: {
+      container: {
+        pad: '6px'
+      },
+      text: {
+        size: 'small',
+      }
+    },
+    icons: {
+      margin: {horizontal: 'xxsmall'},
+      color: 'text'
+    },
   }
 };
