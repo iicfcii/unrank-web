@@ -20,7 +20,7 @@ export const TeamHeader = ({team, hide, onHide, icon}) => {
         )}
       </Box>
       <Box direction={teamToRowDirection(team)} align='center' gap='xsmall'>
-        <Text weight={700} color={teamToColor(team)}>{`队伍${team}`}</Text>
+        <Text weight={700} color={teamToColor(team)}>{`Team ${team}`}</Text>
         {team===1?(icon):(<Box style={{transform:'scale(-1,1)'}}>{icon}</Box>)}
       </Box>
     </Box>

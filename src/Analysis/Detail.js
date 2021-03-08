@@ -233,19 +233,19 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                 background={{color:teamToColor(team),opacity:'0.2'}}
                 width='12px' height='12px' margin='6px'>
               </Box>
-              <Text size='small' color='text'>大招能量</Text>
+              <Text size='small' color='text'>Ult Charge</Text>
             </Box>
             <Box direction='row' align='center'>
               <CaretDownFill size='24px' color='orange'/>
-              <Text size='small' color='text'>大招释放</Text>
+              <Text size='small' color='text'>Ult Use</Text>
             </Box>
             <Box direction='row' align='center'>
               <FormClose size='24px' color={teamToColor(team===1?2:1)}/>
-              <Text size='small' color='text'>击杀</Text>
+              <Text size='small' color='text'>Elim</Text>
             </Box>
             <Box direction='row' align='center'>
               <Box background='line' width='12px' height='12px' margin='6px'></Box>
-              <Text size='small' color='text'>死亡</Text>
+              <Text size='small' color='text'>Death</Text>
             </Box>
           </Box>
           <Stack interactiveChild='first'>
@@ -306,17 +306,17 @@ export const Detail = ({team, data, range, onRangeChange, hide, onHide}) => {
                   maxWidth: 'none', whiteSpace:'nowrap', zIndex: 1000,
                 }}
                 background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
-                <Info label='时间：' value={formatSeconds(hoverInfo.time)}/>
-                <Info label='进度：' value={`
+                <Info label='Time:' value={formatSeconds(hoverInfo.time)}/>
+                <Info label='Progress:' value={`
                   ${
                     data.objective.type==='control'&&hoverInfo.status!==0
-                      ?`队伍${hoverInfo.status}，`
+                      ?`Team ${hoverInfo.status}, `
                       :''
                   }
                   ${hoverInfo.progress}%
                 `}/>
-                {hoverInfo.elimBy && (<Info label='死亡：' value={hoverInfo.elimBy}/>)}
-                {hoverInfo.elim && (<Info label='击杀：' value={hoverInfo.elim}/>)}
+                {hoverInfo.elimBy && (<Info label='Elim by:' value={hoverInfo.elimBy}/>)}
+                {hoverInfo.elim && (<Info label='Elim:' value={hoverInfo.elim}/>)}
               </Box>
             )}
             <Box fill style={{position: 'relative'}}>
@@ -352,7 +352,7 @@ const Time = memo(({data, team, range, onChange}) => {
 
 const Info = ({label, value}) => {
   return (
-    <Box direction='row'>
+    <Box direction='row' gap='xxsmall'>
       <Text size='small' color='white'>{label}</Text>
       <Text weight={900} size='small' color='white'>{value}</Text>
     </Box>

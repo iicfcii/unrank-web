@@ -81,7 +81,7 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
         style={{
           position:'absolute', left:`${g.ratio*100}%`, top:'4px',
         }}>
-        <Text size='small' color='textLight'>{`地图${g.map}`}</Text>
+        <Text size='small' color='textLight'>{`Map ${g.map.toUpperCase()}`}</Text>
       </Box>
     );
   });
@@ -150,12 +150,12 @@ export const ObjectiveChart = ({data, range, onRangeChange}) => {
             maxWidth: 'none', whiteSpace:'nowrap'
           }}
           background={{color:'black',opacity:0.5}} pad='xsmall' round='xxsmall'>
-          <Box direction='row'>
-            <Text size='small' color='white'>{`进度：`}</Text>
+          <Box direction='row' gap='xxsmall'>
+            <Text size='small' color='white'>{`Progress: `}</Text>
             <Text weight={900} size='small' color='white'>{`${hoverInfo.progress}%`}</Text>
           </Box>
-          <Box direction='row'>
-            <Text size='small' color='white'>{`时间：`}</Text>
+          <Box direction='row' gap='xxsmall'>
+            <Text size='small' color='white'>{`Time:`}</Text>
             <Text weight={900} size='small' color='white'>{formatSeconds(hoverInfo.time)}</Text>
           </Box>
         </Box>

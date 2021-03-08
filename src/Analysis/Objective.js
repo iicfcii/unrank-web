@@ -16,14 +16,14 @@ export const Objective = ({data, range, onRangeChange}) => {
         <Box direction='row' gap='xlarge'>
           <Box direction='row' align='center' gap='xsmall'>
             <Box width='12px' height='12px' round background='blue'></Box>
-            <Text size='small' color='textLight'>队伍1防守</Text>
+            <Text size='small' color='textLight'>Team 1 Defend</Text>
           </Box>
           <Box direction='row' align='center' gap='xsmall'>
             <Box width='12px' height='12px' round background='red'></Box>
-            <Text size='small' color='textLight'>队伍2防守</Text>
+            <Text size='small' color='textLight'>Team 2 Defend</Text>
           </Box>
         </Box>
-        <Button primary label='整场数据' size='small' onClick={() => {
+        <Button primary label='All Match' size='small' onClick={() => {
           let rangeNew = [0,data.time.data.length];
           if(onRangeChange) onRangeChange(rangeNew);
         }}/>

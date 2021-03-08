@@ -1,8 +1,7 @@
 import React from 'react';
 import { useHistory } from "react-router-dom";
 import { Box, Heading, Text, Image, Button } from 'grommet';
-import { homeDataCollection, homeDataExample } from '../assets/assets';
-import { Link } from '../utils';
+import { homeCollection, homeVisualization, homeExample } from '../assets/assets';
 
 export const Home = (props) => {
   const history = useHistory();
@@ -19,12 +18,12 @@ export const Home = (props) => {
           <Text size='medium'>A replay code gives you objective progress, hero composition, ultimate usage, elimination, and other improtant statistics. </Text>
         </Box>
         <Box width='500px' round='xsmall' overflow='hidden'>
-          <Image fit='cover' src={homeDataCollection}/>
+          <Image fit='cover' src={homeCollection}/>
         </Box>
       </Box>
       <Box justify='center' align='center' height='400px' direction='row' gap='large' background='white'>
         <Box width='500px' round='xsmall' overflow='hidden'>
-          <Image fit='cover' src={homeDataCollection}/>
+          <Image fit='cover' src={homeVisualization}/>
         </Box>
         <Box width='500px' gap='small'>
           <Heading level={3} margin='none'>Interactive Visualization</Heading>
@@ -37,7 +36,7 @@ export const Home = (props) => {
           <Text size='medium'>With a signle click, match data can be exported to standard format, for further analysis with your favorite software. </Text>
         </Box>
         <Box width='500px' round='xsmall' overflow='hidden'>
-          <Image fit='cover' src={homeDataExample}/>
+          <Image fit='cover' src={homeExample}/>
         </Box>
       </Box>
       <Box justify='center' align='center' height='200px' direction='row' gap='large' background='white'>

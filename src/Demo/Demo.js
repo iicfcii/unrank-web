@@ -21,7 +21,7 @@ export const Demo = (props) => {
     <Box pad={{vertical: 'medium', horizontal: 'large'}} gap='medium'>
       <StatBox>
         <Box direction='row' align='center' justify='start' gap='xsmall'>
-          <Text size='small'>地图类型</Text>
+          <Text size='small'>Type</Text>
           <Box direction='row' width='200px'>
             <Select
               options={Object.keys(DEMOS)}
