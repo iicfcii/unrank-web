@@ -31,6 +31,9 @@ import wreckingballAvatar from './avatar-wreckingball.png';
 import zaryaAvatar from './avatar-zarya.png';
 import zenyattaAvatar from './avatar-zenyatta.png';
 
+export { default as homeDataCollection} from './home-data-collection.png';
+export { default as homeDataExample} from './home-data-example.png';
+
 export const heroAvatar = {
   'ana': anaAvatar,
   'ashe': asheAvatar,
