@@ -23,7 +23,7 @@ export const Objective = ({data, range, onRangeChange}) => {
             <Text size='small' color='textLight'>Team 2 Defend</Text>
           </Box>
         </Box>
-        <Button primary label='All Match' size='small' onClick={() => {
+        <Button label='All Match' size='small' onClick={() => {
           let rangeNew = [0,data.time.data.length];
           if(onRangeChange) onRangeChange(rangeNew);
         }}/>

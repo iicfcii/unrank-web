@@ -112,8 +112,8 @@ export const theme = {
           radius: '4px'
         },
         pad: {
-          horizontal: '16px',
-          vertical: '6px'
+          horizontal: '14px',
+          vertical: '4px'
         }
       },
       medium: {
@@ -121,8 +121,8 @@ export const theme = {
           radius: '4px'
         },
         pad: {
-          horizontal: '16px',
-          vertical: '8px'
+          horizontal: '14px',
+          vertical: '6px'
         }
       },
       large: {
@@ -130,8 +130,8 @@ export const theme = {
           radius: '4px'
         },
         pad: {
-          horizontal: '48px',
-          vertical: '16px'
+          horizontal: '46px',
+          vertical: '14px'
         }
       }
     },
@@ -143,7 +143,7 @@ export const theme = {
     primary: {
       color: 'white',
       background: { color: 'brand' },
-      border: undefined,
+      border: { color: 'brand', width: '2px' },
       font: { weight: 700 },
     },
   },
