@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useRouteMatch, useHistory } from "react-router-dom";
-import { Box, Text, Button } from 'grommet';
-import { Analytics } from 'grommet-icons';
+import { useRouteMatch } from "react-router-dom";
+import { Box, Text } from 'grommet';
 import { Link } from './utils';
 
 const HOME_LABEL = 'Home';
@@ -10,8 +9,6 @@ const ABOUT_LABEL = 'About';
 
 export const Header = (props) => {
   const [select, setSelect] = useState(HOME_LABEL);
-
-  let history = useHistory();
 
   let matchHome = useRouteMatch('/');
   let matchDemo = useRouteMatch('/demo');
@@ -44,12 +41,6 @@ export const Header = (props) => {
         <Item
           label={ABOUT_LABEL} select={select===ABOUT_LABEL}
           to={'/about'}/>
-      </Box>
-      <Box fill justify='center' align='end'>
-        <Button
-          onClick={() => history.push('/analysis')}
-          primary label='Analyze' size='medium' gap='xsmall'
-          icon={<Analytics color='white' size='24px'/>}/>
       </Box>
     </Box>
   );
