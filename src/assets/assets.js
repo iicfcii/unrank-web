@@ -35,6 +35,8 @@ export { default as homeCollection} from './home-collection.png';
 export { default as homeVisualization} from './home-visualization.png';
 export { default as homeExample} from './home-example.png';
 
+export { default as visualizeBanner} from './visualize-banner.png';
+
 export const heroAvatar = {
   'ana': anaAvatar,
   'ashe': asheAvatar,
