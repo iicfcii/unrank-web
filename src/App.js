@@ -6,8 +6,8 @@ import { theme } from './theme';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Home } from './Home/Home';
+import { Visual } from './Visual/Visual';
 import { Demo } from './Demo/Demo';
-import { Analysis } from './Analysis/Analysis';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
 
@@ -27,8 +27,8 @@ const App = () => {
           <Route path='/demo'>
             <Demo />
           </Route>
-          <Route path='/analysis'>
-            <Analysis />
+          <Route path='/visual'>
+            <Visual/>
           </Route>
           <Route path='/'>
             <Home />

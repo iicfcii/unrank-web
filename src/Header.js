@@ -4,6 +4,7 @@ import { Box, Text } from 'grommet';
 import { Link } from './utils';
 
 const HOME_LABEL = 'Home';
+const VISUAL_LABEL = 'Visual';
 const DEMO_LABEL = 'Demo';
 const ABOUT_LABEL = 'About';
 
@@ -11,15 +12,15 @@ export const Header = (props) => {
   const [select, setSelect] = useState(HOME_LABEL);
 
   let matchHome = useRouteMatch('/');
+  let matchVisual = useRouteMatch('/visual');
   let matchDemo = useRouteMatch('/demo');
   let matchAbout = useRouteMatch('/about');
-  let matchLegal = useRouteMatch('/legal');
 
-  let page = HOME_LABEL;
-  if (matchHome) page = HOME_LABEL;
+  let page = null;
+  if (matchHome.isExact) page = HOME_LABEL;
+  if (matchVisual) page = VISUAL_LABEL;
   if (matchDemo) page = DEMO_LABEL;
   if (matchAbout) page = ABOUT_LABEL;
-  if (matchLegal) page = null;
 
   useEffect(() => {setSelect(page)},[page]);
 
@@ -35,6 +36,9 @@ export const Header = (props) => {
         <Item
           label={HOME_LABEL} select={select===HOME_LABEL}
           to={'/'}/>
+        <Item
+          label={VISUAL_LABEL} select={select===VISUAL_LABEL}
+          to={'/visual'}/>
         <Item
           label={DEMO_LABEL} select={select===DEMO_LABEL}
           to={'/demo'}/>
