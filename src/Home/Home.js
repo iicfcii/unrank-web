@@ -38,7 +38,7 @@ export const Home = (props) => {
         </Box>
       </Box>
       <Box justify='center' align='center' direction='row' gap='large' background='white' pad='xlarge'>
-        <Link to='/visual' style={{borderRadius: '4px'}}>
+        <Link to='/visualize' style={{borderRadius: '4px'}}>
           <Box
             round='xxsmall' background='orange'
             pad={{horizontal:'xlarge',vertical:'small'}}>

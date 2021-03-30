@@ -6,7 +6,7 @@ import { theme } from './theme';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Home } from './Home/Home';
-import { Visual } from './Visual/Visual';
+import { Visualize } from './Visualize/Visualize';
 import { Demo } from './Demo/Demo';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
@@ -33,8 +33,8 @@ const App = () => {
           <Route path='/demo'>
             <Demo />
           </Route>
-          <Route path='/visual'>
-            <Visual/>
+          <Route path='/visualize'>
+            <Visualize/>
           </Route>
           <Route path='/'>
             <Home />

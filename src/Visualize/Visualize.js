@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text, Heading, TextInput, Paragraph, Button, Anchor } from 'grommet';
 const AV = require('leancloud-storage');
 
-export const Visual = (props) => {
+export const Visualize = (props) => {
   const [captcha, setCaptcha] = useState(null);
   const [email, setEmail] = useState('');
   const [repeatEmail, setRepeatEmail] = useState('');
