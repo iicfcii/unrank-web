@@ -5,10 +5,22 @@ const AV = require('leancloud-storage');
 
 export const Visualize = (props) => {
   const [captcha, setCaptcha] = useState(null);
+
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState(false);
   const [repeatEmail, setRepeatEmail] = useState('');
+  const [repeatEmailError, setRepeatEmailError] = useState(false);
   const [replay, setReplay] = useState('');
+  const [replayError, setReplayError] = useState(false);
   const [captchaCode, setCaptchaCode] = useState('');
+  const [captchaCodeError, setCaptchaCodeError] = useState(false);
+
+  const [submitStatus, setSubmitStatus] = useState(false);
+
+  const [replayRe, setReplayRe] = useState('');
+  const [replayReError, setReplayReError] = useState(false);
+
+  const [retrieveStatus, setRetrieveStatus] = useState(false);
 
   useEffect(() => {
     AV.Captcha.request({ width:90, height:30,})
@@ -36,21 +48,27 @@ export const Visualize = (props) => {
             <TextInput value={email} onChange={(event) => {
               setEmail(event.target.value);
             }}/>
-            <Text size='small' color='red'>Not a valid email.</Text>
+            {emailError && (
+              <Text size='small' color='red'>Not a valid email.</Text>
+            )}
           </Box>
           <Box align='start' justify='start' gap='xsmall'>
             <Heading level={6} margin='none'>Repeat email</Heading>
             <TextInput value={repeatEmail} onChange={(event) => {
               setRepeatEmail(event.target.value);
             }}/>
-            <Text size='small' color='red'>Emails do not match.</Text>
+            {repeatEmailError && (
+              <Text size='small' color='red'>Emails do not match.</Text>
+            )}
           </Box>
           <Box align='start' justify='start' gap='xsmall'>
             <Heading level={6} margin='none'>Replay code</Heading>
             <TextInput value={replay} onChange={(event) => {
               setReplay(event.target.value);
             }}/>
-            <Text size='small' color='red'>Not a valid replay code.</Text>
+            {replayError && (
+              <Text size='small' color='red'>Not a Error replay code.</Text>
+            )}
           </Box>
           <Box align='start' justify='start' gap='xsmall'>
             <Heading level={6} margin='none'>Are you a robot?</Heading>
@@ -71,22 +89,71 @@ export const Visualize = (props) => {
               onChange={(event) => {
                 setCaptchaCode(event.target.value);
               }}/>
-            <Text size='small' color='red'>Code does not match image.</Text>
+            {captchaCodeError && (
+              <Text size='small' color='red'>Code does not match image.</Text>
+            )}
           </Box>
         </Box>
-        <Button label='Submit' size='small' primary onClick={() => {
-        }}/>
+        <Box align='start' gap='xsmall'>
+          <Button
+            label='Submit' size='small' primary
+            onClick={() => {
+              let emailErrorNew = !validEmail(email);
+              setEmailError(emailErrorNew);
+
+              let repeatEmailErrorNew = email!==repeatEmail;
+              setRepeatEmailError(repeatEmailErrorNew);
+
+              let replayErrorNew = !validReplay(replay);
+              setReplayError(replayErrorNew);
+
+              if (emailErrorNew || repeatEmailErrorNew || replayErrorNew) return;
+
+              captcha.verify(captchaCode)
+                .then((ErrorateToken) => {
+                  setCaptchaCodeError(false);
+                    // Submit replay
+                    console.log('submit replay');
+                })
+                .catch((error) => {
+                  console.log(error)
+                  setCaptchaCodeError(true);
+                });
+            }}/>
+          {submitStatus && (
+            <Text size='medium'>{submitStatus}</Text>
+          )}
+        </Box>
         <Heading level={3} margin='none'>Retrieve a Match</Heading>
         <Paragraph margin='none' fill size='small'>
          We will ask for the email you entered when you submitted the replay code. We don't like others peeking your matches.
         </Paragraph>
         <Box align='start' justify='start' gap='xsmall'>
           <Heading level={6} margin='none'>Replay code</Heading>
-          <TextInput/>
-          <Text size='small' color='red'>Not a valid replay code.</Text>
+          <TextInput
+            value={replayRe}
+            onChange={(event) => {
+              setReplayRe(event.target.value);
+            }}/>
+          {replayReError && (
+            <Text size='small' color='red'>Not a Error replay code.</Text>
+          )}
         </Box>
-        <Button label='Retrieve' size='small' primary onClick={() => {
-        }}/>
+        <Box align='start' gap='xsmall'>
+          <Button
+            label='Retrieve' size='small' primary
+            onClick={() => {
+              let replayReErrorNew = !validReplay(replayRe);
+              setReplayReError(replayReErrorNew);
+
+              if (replayReErrorNew) return;
+
+              console.log('retrieve replay');
+            }}/>
+          {retrieveStatus && (
+            <Text size='medium'>{retrieveStatus}</Text>
+          )}
+        </Box>
       </Box>
     </Box>
   );
