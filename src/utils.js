@@ -33,8 +33,8 @@ export const teamToPlayers = (team) => {
 export const formatSeconds = (s) => {
   let min = Math.floor(s/60);
   let sec = s-min*60
+  min = min.toString();
+  sec = sec.toString()
 
-  if (min === 0) return `${sec}秒`;
-
-  return `${min}分${sec}秒`;
+  return `${min.padStart(2,'0')}:${sec.padStart(2,'0')}`;
 }

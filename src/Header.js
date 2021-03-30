@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useRouteMatch, useHistory } from "react-router-dom";
-import { Box, Text, Button } from 'grommet';
-import { Analytics } from 'grommet-icons';
+import { useRouteMatch } from "react-router-dom";
+import { Box, Text } from 'grommet';
 import { Link } from './utils';
 
-const HOME_LABEL = '首页';
-const DEMO_LABEL = '示例';
-const ABOUT_LABEL = '关于';
+const HOME_LABEL = 'Home';
+const DEMO_LABEL = 'Demo';
+const ABOUT_LABEL = 'About';
 
 export const Header = (props) => {
   const [select, setSelect] = useState(HOME_LABEL);
-
-  let history = useHistory();
 
   let matchHome = useRouteMatch('/');
   let matchDemo = useRouteMatch('/demo');
@@ -32,7 +29,7 @@ export const Header = (props) => {
       height='64px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'bottom', style:'solid'}}>
       <Box flex={false} justify='center'>
-        <Text weight={900} size='xxlarge'>UNRANK</Text>
+        <Text weight={900} size='xxlarge'>Unrank</Text>
       </Box>
       <Box flex={false} direction='row' margin={{left:'large'}} gap='1px'>
         <Item
@@ -44,12 +41,6 @@ export const Header = (props) => {
         <Item
           label={ABOUT_LABEL} select={select===ABOUT_LABEL}
           to={'/about'}/>
-      </Box>
-      <Box fill justify='center' align='end'>
-        <Button
-          onClick={() => history.push('/analysis')}
-          primary label='分析' size='medium' gap='xsmall'
-          icon={<Analytics color='white' size='24px'/>}/>
       </Box>
     </Box>
   );

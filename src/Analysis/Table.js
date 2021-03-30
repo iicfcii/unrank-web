@@ -360,10 +360,10 @@ const TitleRow = ({team}) => {
       justify='between' align='center'
       gap='xlarge' margin={{vertical: 'small'}}
       border={{color:'line', size:'2px', side:'bottom', style:'solid'}}>
-      <BarTitle label='英雄'/>
-      <ValueTitle label='大招'/>
-      <ValueTitle label='死亡'/>
-      <ValueTitle label='击杀'/>
+      <BarTitle label='Hero'/>
+      <ValueTitle label='Ult'/>
+      <ValueTitle label='Death'/>
+      <ValueTitle label='Elim'/>
     </Box>
   );
 }
