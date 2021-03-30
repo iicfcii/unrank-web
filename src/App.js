@@ -11,6 +11,12 @@ import { Demo } from './Demo/Demo';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
 
+const AV = require('leancloud-storage');
+AV.init({
+  appId: 'vNMcfOQkbIrK2mv1HCODUDie-MdYXbMMI',
+  appKey: 'UDpxy5slHSvQQUzenUabBURS',
+});
+
 const App = () => {
 
   return (

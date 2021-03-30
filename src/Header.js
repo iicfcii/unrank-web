@@ -4,7 +4,7 @@ import { Box, Text } from 'grommet';
 import { Link } from './utils';
 
 const HOME_LABEL = 'Home';
-const VISUAL_LABEL = 'Visual';
+const VISUAL_LABEL = 'Submit';
 const DEMO_LABEL = 'Demo';
 const ABOUT_LABEL = 'About';
 
