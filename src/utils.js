@@ -38,3 +38,13 @@ export const formatSeconds = (s) => {
 
   return `${min.padStart(2,'0')}:${sec.padStart(2,'0')}`;
 }
+
+export const validEmail = (email) => {
+  var re = /^\S+@\S+\.\S+$/;
+  return re.test(email);
+}
+
+export const validReplay = (replay) => {
+  var re = /^[a-zA-z0-9]{6}$/;
+  return re.test(replay);
+}
