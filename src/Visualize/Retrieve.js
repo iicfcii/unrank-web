@@ -41,11 +41,14 @@ export const Retrieve = (props) => {
         </Box>
         <Box align='start' justify='start' gap='xsmall'>
           <Heading level={6} margin='none'>Replay code</Heading>
-          <TextInput value={replay} onChange={(event) => {
-            setReplay(event.target.value);
-          }}/>
+          <TextInput
+            placeholder='NOT case sensitive'
+            value={replay}
+            onChange={(event) => {
+              setReplay(event.target.value);
+            }}/>
           {replayError && (
-            <Text size='small' color='red'>Not a Error replay code.</Text>
+            <Text size='small' color='red'>Not a valid replay code.</Text>
           )}
         </Box>
         <Box align='start' justify='start' gap='xsmall'>
@@ -62,7 +65,7 @@ export const Retrieve = (props) => {
             </Box>
           )}
           <TextInput
-            placeholder='Code is NOT case sensitive.'
+            placeholder='NOT case sensitive'
             value={captchaCode}
             onChange={(event) => {
               setCaptchaCode(event.target.value);
