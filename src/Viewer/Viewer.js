@@ -9,6 +9,7 @@ export const Viewer = (props) => {
   const history = useHistory();
 
   const [data, setData] = useState(null);
+  const [replay, setReplay] = useState(null);
 
   useEffect(() => {
     if (id === undefined) {
@@ -18,12 +19,16 @@ export const Viewer = (props) => {
 
     const replayQ = new AV.Query('Replay');
     replayQ.equalTo('objectId', id);
+    replayQ.select(['json', 'csv']);
     replayQ.first()
       .then((r) => {
         if (r) {
           fetch(r.get('json').url())
             .then(res => res.json())
-            .then(setData)
+            .then(d => {
+              setData(d);
+              setReplay(r);
+            })
             .catch(error => {
               console.log(error);
               history.push('/visualize');
@@ -36,8 +41,8 @@ export const Viewer = (props) => {
 
   return(
     <Box pad={{vertical: 'medium', horizontal: 'large'}} gap='medium'>
-      {data && (
-        <DataViewer data={data}/>
+      {data && replay && (
+        <DataViewer data={data} replay={replay}/>
       )}
     </Box>
   );
