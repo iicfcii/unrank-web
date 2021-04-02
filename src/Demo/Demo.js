@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Select, Text } from 'grommet';
-import { DataViewer } from '../Analysis/DataViewer';
-import { StatBox } from '../Analysis/StatBox';
+import { DataViewer } from '../Viewer/DataViewer';
+import { StatBox } from '../Viewer/StatBox';
 import escort from '../assets/escort.json';
 import assault from '../assets/assault.json';
 import hybrid from '../assets/hybrid.json';

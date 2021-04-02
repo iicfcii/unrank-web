@@ -8,6 +8,7 @@ import { Footer } from './Footer';
 import { Home } from './Home/Home';
 import { Visualize } from './Visualize/Visualize';
 import { Demo } from './Demo/Demo';
+import { Viewer } from './Viewer/Viewer';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
 
@@ -35,6 +36,9 @@ const App = () => {
           </Route>
           <Route path='/visualize'>
             <Visualize/>
+          </Route>
+          <Route path={['/viewer/:id','/v/:id','/viewer','/v']}>
+            <Viewer/>
           </Route>
           <Route path='/'>
             <Home />

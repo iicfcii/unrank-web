@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Box, Text, Heading, TextInput, Paragraph, Button, Anchor } from 'grommet';
 import { validEmail, validReplay } from '../utils';
 const AV = require('leancloud-storage');
 
 export const Retrieve = (props) => {
+  const history = useHistory();
+
   const [captcha, setCaptcha] = useState(null);
 
   const [email, setEmail] = useState('');
@@ -97,6 +100,7 @@ export const Retrieve = (props) => {
                   .then((r) => {
                     if (r) {
                       setStatus('Successfully retrieved replay.');
+                      history.push(`/v/${r.get('objectId')}`);
                     } else {
                       setStatus('No replay found.');
                     }
