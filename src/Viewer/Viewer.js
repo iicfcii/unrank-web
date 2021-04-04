@@ -19,10 +19,10 @@ export const Viewer = (props) => {
 
     const replayQ = new AV.Query('Replay');
     replayQ.equalTo('objectId', id);
-    replayQ.select(['json', 'csv']);
+    replayQ.select(['json', 'csv', 'status']);
     replayQ.first()
       .then((r) => {
-        if (r) {
+        if (r && r.get('status') === 2) {
           fetch(r.get('json').url())
             .then(res => res.json())
             .then(d => {

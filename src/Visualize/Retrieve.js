@@ -99,8 +99,12 @@ export const Retrieve = (props) => {
                 replayQ.first()
                   .then((r) => {
                     if (r) {
-                      setStatus('Successfully retrieved replay.');
-                      history.push(`/v/${r.get('objectId')}`);
+                      if (r.get('status') === 2) {
+                        setStatus('Successfully retrieved replay.');
+                        history.push(`/v/${r.get('objectId')}`);
+                      } else {
+                        setStatus('Replay not ready.');
+                      }
                     } else {
                       setStatus('No replay found.');
                     }
