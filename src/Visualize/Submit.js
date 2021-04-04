@@ -28,9 +28,9 @@ export const Submit = (props) => {
     <Box gap='medium'>
       <Heading level={3} margin='none'>Submit a Match</Heading>
       <Paragraph margin='none' fill size='small'>
-       We will send you an email when the data for your match is ready.
-       It should be ready within 1 day.
-       You will need your email and replay code to access the data.
+        We only support matches in COMPETITIVE mode.
+        We will send you an email with the link to the data when collection finishes.
+        It should be ready within 1 or 2 days.
       </Paragraph>
       <Box gap='small' width='300px'>
         <Box align='start' justify='start' gap='xsmall'>

@@ -28,7 +28,7 @@ export const Header = (props) => {
       height='64px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'bottom', style:'solid'}}>
       <Box flex={false} justify='center'>
-        <Text weight={900} size='xxlarge'>Unrank</Text>
+        <Text weight={700} size='xxlarge'>UNRANK</Text>
       </Box>
       <Box flex={false} direction='row' margin={{left:'large'}} gap='1px'>
         <Item
