@@ -38,13 +38,15 @@ export const Home = (props) => {
         </Box>
       </Box>
       <Box justify='center' align='center' direction='row' gap='large' background='white' pad='xlarge'>
-        <Link to='/visualize' style={{borderRadius: '4px'}}>
-          <Box
-            round='xxsmall' background='orange'
-            pad={{horizontal:'xlarge',vertical:'small'}}>
-            <Text color='white' size='medium' weight={700}>Visualize Matches</Text>
-          </Box>
-        </Link>
+        {
+          // <Link to='/visualize' style={{borderRadius: '4px'}}>
+          //   <Box
+          //     round='xxsmall' background='orange'
+          //     pad={{horizontal:'xlarge',vertical:'small'}}>
+          //     <Text color='white' size='medium' weight={700}>Visualize Matches</Text>
+          //   </Box>
+          // </Link>
+        }
         <Link to='/demo' style={{borderRadius: '4px'}}>
           <Box
             border={{color:'orange', size: '2px'}} round='xxsmall'

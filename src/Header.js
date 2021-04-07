@@ -42,15 +42,17 @@ export const Header = (props) => {
           to={'/about'}/>
       </Box>
       <Box fill direction='row' justify='end' align='center'>
-        <Link to='/visualize' style={{borderRadius: '4px'}}>
-          <Box
-            direction='row' align='center' gap='xxsmall'
-            border={{color:'orange', size: '2px'}} round='xxsmall'
-            pad={{horizontal:'small',vertical:'xsmall'}}>
-            <Analytics color='orange' size='24px'/>
-            <Text color='orange' size='medium' weight={700}>Visualize Matches</Text>
-          </Box>
-        </Link>
+        {
+          // <Link to='/visualize' style={{borderRadius: '4px'}}>
+          //   <Box
+          //     direction='row' align='center' gap='xxsmall'
+          //     border={{color:'orange', size: '2px'}} round='xxsmall'
+          //     pad={{horizontal:'small',vertical:'xsmall'}}>
+          //     <Analytics color='orange' size='24px'/>
+          //     <Text color='orange' size='medium' weight={700}>Visualize Matches</Text>
+          //   </Box>
+          // </Link>
+        }
       </Box>
     </Box>
   );
