@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 
 const StyledLink = styled(RouterLink)`
@@ -11,6 +11,10 @@ const StyledLink = styled(RouterLink)`
     }
 `
 export const Link = (props) => <StyledLink {...props}/>;
+
+export const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+}
 
 export const capitalize = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -37,4 +41,14 @@ export const formatSeconds = (s) => {
   sec = sec.toString()
 
   return `${min.padStart(2,'0')}:${sec.padStart(2,'0')}`;
+}
+
+export const validEmail = (email) => {
+  var re = /^\S+@\S+\.\S+$/;
+  return re.test(email);
+}
+
+export const validReplay = (replay) => {
+  var re = /^[a-zA-z0-9]{6}$/;
+  return re.test(replay);
 }

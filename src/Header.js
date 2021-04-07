@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouteMatch } from "react-router-dom";
 import { Box, Text } from 'grommet';
+import { Analytics } from 'grommet-icons';
 import { Link } from './utils';
 
 const HOME_LABEL = 'Home';
@@ -13,13 +14,11 @@ export const Header = (props) => {
   let matchHome = useRouteMatch('/');
   let matchDemo = useRouteMatch('/demo');
   let matchAbout = useRouteMatch('/about');
-  let matchLegal = useRouteMatch('/legal');
 
-  let page = HOME_LABEL;
-  if (matchHome) page = HOME_LABEL;
+  let page = null;
+  if (matchHome.isExact) page = HOME_LABEL;
   if (matchDemo) page = DEMO_LABEL;
   if (matchAbout) page = ABOUT_LABEL;
-  if (matchLegal) page = null;
 
   useEffect(() => {setSelect(page)},[page]);
 
@@ -29,7 +28,7 @@ export const Header = (props) => {
       height='64px' pad={{horizontal:'large'}}
       border={{color:'border', size:'xsmall', side:'bottom', style:'solid'}}>
       <Box flex={false} justify='center'>
-        <Text weight={900} size='xxlarge'>Unrank</Text>
+        <Text weight={700} size='xxlarge'>UNRANK</Text>
       </Box>
       <Box flex={false} direction='row' margin={{left:'large'}} gap='1px'>
         <Item
@@ -41,6 +40,17 @@ export const Header = (props) => {
         <Item
           label={ABOUT_LABEL} select={select===ABOUT_LABEL}
           to={'/about'}/>
+      </Box>
+      <Box fill direction='row' justify='end' align='center'>
+        <Link to='/visualize' style={{borderRadius: '4px'}}>
+          <Box
+            direction='row' align='center' gap='xxsmall'
+            border={{color:'orange', size: '2px'}} round='xxsmall'
+            pad={{horizontal:'small',vertical:'xsmall'}}>
+            <Analytics color='orange' size='24px'/>
+            <Text color='orange' size='medium' weight={700}>Visualize Matches</Text>
+          </Box>
+        </Link>
       </Box>
     </Box>
   );

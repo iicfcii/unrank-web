@@ -1,7 +1,7 @@
 export const theme = {
   global: {
     font: {
-      family: 'Noto Sans SC',
+      family: 'Noto Sans, sans-serif',
     },
     // active: {
     //   background: {

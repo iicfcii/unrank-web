@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { Box, Select, Text } from 'grommet';
-import { DataViewer } from '../Analysis/DataViewer';
-import { StatBox } from '../Analysis/StatBox';
-import escort from '../assets/escort.json';
-import assault from '../assets/assault.json';
-import hybrid from '../assets/hybrid.json';
-import control from '../assets/control.json';
+import { DataViewer } from '../Viewer/DataViewer';
+import { StatBox } from '../Viewer/StatBox';
+const AV = require('leancloud-storage');
 
 const DEMOS = {
-  'Escort': escort,
-  'Assault': assault,
-  'Hybrid': hybrid,
-  'Control': control
+  'Escort': '606561de2c9df85c5744bf49',
+  'Assault': '606943429d29e66a14fe43bc',
+  'Hybrid': '60692ca668637730b738db55',
+  'Control': '60691df89d29e66a14fe2d10'
 }
 
 export const Demo = (props) => {
+  const history = useHistory();
   const [type, setType] = useState('Escort');
+  const [data, setData] = useState(null);
+  const [replay, setReplay] = useState(null);
+
+  useEffect(() => {
+    const replayQ = new AV.Query('Replay');
+    replayQ.equalTo('objectId', DEMOS[type]);
+    replayQ.select(['json', 'csv', 'status']);
+    replayQ.first()
+      .then((r) => {
+        if (r && r.get('status') === 2) {
+          fetch(r.get('json').url())
+            .then(res => res.json())
+            .then(d => {
+              setData(d);
+              setReplay(r);
+            })
+            .catch(error => {
+              console.log(error);
+              history.push('/');
+            });
+        } else {
+          history.push('/');
+        }
+      });
+  },[type, history]);
 
   return(
     <Box pad={{vertical: 'medium', horizontal: 'large'}} gap='medium'>
@@ -32,7 +56,9 @@ export const Demo = (props) => {
           </Box>
         </Box>
       </StatBox>
-      <DataViewer data={DEMOS[type]}/>
+      {data && replay && (
+        <DataViewer data={data} replay={replay}/>
+      )}
     </Box>
   );
 }

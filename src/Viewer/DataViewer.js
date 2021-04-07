@@ -5,7 +5,7 @@ import { Objective } from './Objective';
 import { Table } from './Table';
 import { Detail } from './Detail';
 
-export const DataViewer = ({data}) => {
+export const DataViewer = ({data, replay}) => {
   const [range, setRange] = useState([0,data.time.data.length]);
   const [hideTable, setHideTable] = useState(true);
   const [hideDetail, setHideDetail] = useState(false);
@@ -17,7 +17,7 @@ export const DataViewer = ({data}) => {
   return(
     <Box gap='medium'>
       <Box direction='row' height='276px' gap='medium' fill='horizontal'>
-        <Info data={data}/>
+        <Info data={data} replay={replay}/>
         <Objective data={data} range={range} onRangeChange={setRange}/>
       </Box>
       <Box direction='row' gap='medium' fill='horizontal'>

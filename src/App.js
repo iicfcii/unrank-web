@@ -6,10 +6,17 @@ import { theme } from './theme';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { Home } from './Home/Home';
+import { Visualize } from './Visualize/Visualize';
 import { Demo } from './Demo/Demo';
-import { Analysis } from './Analysis/Analysis';
+import { Viewer } from './Viewer/Viewer';
 import { About } from './About/About';
 import { Legal } from './Legal/Legal';
+
+const AV = require('leancloud-storage');
+AV.init({
+  appId: 'vNMcfOQkbIrK2mv1HCODUDie-MdYXbMMI',
+  appKey: 'UDpxy5slHSvQQUzenUabBURS',
+});
 
 const App = () => {
 
@@ -27,8 +34,11 @@ const App = () => {
           <Route path='/demo'>
             <Demo />
           </Route>
-          <Route path='/analysis'>
-            <Analysis />
+          <Route path='/visualize'>
+            <Visualize/>
+          </Route>
+          <Route path={['/viewer/:id','/v/:id','/viewer','/v']}>
+            <Viewer/>
           </Route>
           <Route path='/'>
             <Home />
